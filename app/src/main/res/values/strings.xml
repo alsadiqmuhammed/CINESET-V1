@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CINESET</string>
-    <string name="favorites">المفضلة</string>
-    <string name="all_apps">كل التطبيقات</string>
-    <string name="search_hint">ابحث عن تطبيق…</string>
-    <string name="favorites_empty">اضغط مطولاً على أي تطبيق لإضافته للمفضلة</string>
-    <string name="add_favorite">إضافة للمفضلة</string>
-    <string name="remove_favorite">إزالة من المفضلة</string>
-    <string name="app_info">معلومات التطبيق</string>
-    <string name="uninstall">إلغاء التثبيت</string>
-    <string name="battery_format">%d%%</string>
-    <string name="battery_charging_format">⚡ %d%%</string>
+    <string name="app_name">مدار</string>
+    <string name="digest_service">كبسولة الإشعارات في مدار</string>
+    <string name="channel_nudges">تنبيهات مدار اللطيفة</string>
 </resources>

@@ -1,0 +1,95 @@
+package com.madar.launcher
+
+import android.content.ComponentName
+import android.graphics.Bitmap
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.madar.launcher.command.Action
+import com.madar.launcher.command.normalize
+import com.madar.launcher.data.AppEntry
+import com.madar.launcher.data.AppKind
+import com.madar.launcher.data.Mode
+import com.madar.launcher.data.StackItem
+import com.madar.launcher.data.newItemId
+import com.madar.launcher.ui.Overlay
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+import java.io.File
+
+/** Renders key screens to PNG for visual review (realme GT 8 Pro-like 1272x2800 @ 3.5x is approximated by xxhdpi). */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [35], qualifiers = "ar-w411dp-h900dp-xxhdpi")
+class ScreensTest {
+
+    @get:Rule val rule = createAndroidComposeRule<MainActivity>()
+
+    private val app get() = rule.activity.application as MadarApp
+    private val controller get() = rule.activity.javaClass.getDeclaredField("controller").apply { isAccessible = true }.get(rule.activity) as com.madar.launcher.ui.LauncherController
+
+    private fun entry(pkg: String, label: String, kind: AppKind) =
+        AppEntry(ComponentName(pkg, "$pkg.Main"), label, kind, normalize(label))
+
+    private fun seed() {
+        app.apps.replaceForTest(
+            listOf(
+                entry("com.google.android.dialer", "الهاتف", AppKind.COMMS),
+                entry("com.whatsapp", "WhatsApp", AppKind.COMMS),
+                entry("org.telegram.messenger", "Telegram", AppKind.COMMS),
+                entry("com.oplus.camera", "الكاميرا", AppKind.TOOLS),
+                entry("com.google.android.apps.maps", "الخرائط", AppKind.TOOLS),
+                entry("com.notion.id", "Notion", AppKind.WORK),
+                entry("com.google.android.calendar", "التقويم", AppKind.WORK),
+                entry("com.spotify.music", "Spotify", AppKind.CALM),
+                entry("com.instagram.android", "Instagram", AppKind.SOCIAL),
+                entry("com.google.android.youtube", "YouTube", AppKind.ENTERTAINMENT),
+                entry("com.android.settings", "الإعدادات", AppKind.TOOLS),
+            ),
+        )
+        val s = app.stacks.create("سفرة أربيل")
+        app.stacks.addItem(s.id, StackItem.Note(newItemId(), "حجز الفندق\nقبل الخميس"))
+        app.stacks.addItem(s.id, StackItem.Link(newItemId(), "https://booking.com", "booking.com"))
+        app.stacks.create("امتحان الإحصاء")
+        app.settings.edit { it.copy(onboarded = true) }
+    }
+
+    private fun shot(name: String) {
+        rule.waitForIdle()
+        Thread.sleep(400) // let Dispatchers.IO work (palette parsing) land
+        rule.waitForIdle()
+        rule.mainClock.advanceTimeBy(2_000)
+        val dir = File(System.getProperty("madar.screens") ?: "screens").apply { mkdirs() }
+        var bitmap: Bitmap? = null
+        rule.runOnUiThread {
+            val view = rule.activity.window.decorView
+            bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888).also { view.draw(android.graphics.Canvas(it)) }
+        }
+        File(dir, "$name.png").outputStream().use { bitmap!!.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    private fun on(block: () -> Unit) {
+        rule.runOnUiThread(block)
+    }
+
+    @Test fun renderScreens() {
+        shot("0-onboarding")
+        on { seed(); controller.close() }
+        for (mode in Mode.entries) {
+            on { controller.setMode(mode) }
+            shot("1-home-${mode.name.lowercase()}")
+        }
+        on { controller.setMode(Mode.FLOW); controller.open(Overlay.Palette()) }
+        shot("2-palette-empty")
+        on { controller.open(Overlay.Palette("مؤقت ربع ساعة")) }
+        shot("3-palette-timer")
+        on { controller.execute(Action.LaunchApp(app.apps.apps.value.first { it.packageName == "com.instagram.android" })) }
+        shot("4-intent-gate")
+        on { controller.open(Overlay.StackView(app.stacks.stacks.value.first().id)) }
+        shot("5-stack")
+        on { controller.open(Overlay.Settings) }
+        shot("6-settings")
+    }
+}

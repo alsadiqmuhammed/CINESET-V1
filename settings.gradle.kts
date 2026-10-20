@@ -14,5 +14,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "CinesetLauncher"
+rootProject.name = "MadarLauncher"
 include(":app")

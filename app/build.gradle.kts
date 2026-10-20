@@ -14,8 +14,11 @@ android {
         // Built for realme GT 8 Pro (Android 16); 33 makes media permissions and themed icons unconditional.
         minSdk = 33
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.4.0"
+
+        // The realme GT 8 Pro is arm64; dropping x86 keeps the LLM runtime from doubling the APK.
+        ndk { abiFilters += "arm64-v8a" }
     }
 
     // The one key every installed Madar build carries; see keystore/README.md. Never committed.
@@ -81,6 +84,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("com.google.zxing:core:3.5.3")
+    // On-device LLM runtime; the model file itself is imported by the user (Madar has no INTERNET).
+    implementation("com.google.mediapipe:tasks-genai:0.10.29")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")

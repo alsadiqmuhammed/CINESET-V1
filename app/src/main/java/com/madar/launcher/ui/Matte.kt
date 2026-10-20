@@ -1,10 +1,16 @@
 package com.madar.launcher.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
@@ -65,6 +71,18 @@ fun Modifier.matte(
 /** Outline-only control: same lit edge, no fill. */
 fun Modifier.etched(palette: Palette, shape: Shape, color: Color = palette.stroke): Modifier =
     this.clip(shape).border(1.dp, Brush.verticalGradient(listOf(palette.highlight, color)), shape)
+
+/** The orbit mark turning slowly: shown only while on-device intelligence is working. */
+@Composable
+fun SpinningOrbit(color: Color, size: Dp, pivot: Color = color) {
+    val spin by rememberInfiniteTransition(label = "orbit").animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(1800, easing = LinearEasing)),
+        label = "spin",
+    )
+    OrbitMark(color, size, spin = spin, pivot = pivot)
+}
 
 /**
  * The MADAR mark: an open orbit (a 300° arc) around a fixed pivot point.

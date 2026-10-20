@@ -32,6 +32,7 @@ class MadarApp : Application() {
     lateinit var friction: FrictionRepository private set
     lateinit var agenda: AgendaRepository private set
     lateinit var places: PlacesRepository private set
+    lateinit var ai: com.madar.launcher.ai.LocalAi private set
 
     override fun onCreate() {
         super.onCreate()
@@ -45,6 +46,7 @@ class MadarApp : Application() {
         friction = FrictionRepository(this)
         agenda = AgendaRepository(this)
         places = PlacesRepository(this).also { it.start() }
+        ai = com.madar.launcher.ai.LocalAi(this, scope)
         // If the process died while the screen was held in grayscale, give the colour back.
         Grayscale.release(this)
         Reminders.createChannel(this)

@@ -25,6 +25,8 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.getValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -68,7 +70,31 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
         contacts = { app.contacts.search(it) },
         stacks = { app.stacks.stacks.value },
         custom = { app.settings.value.customCommands },
+        aiAvailable = { app.ai.state.value !is com.madar.launcher.ai.AiState.Missing && app.ai.state.value !is com.madar.launcher.ai.AiState.Importing },
     )
+
+    private val interpreter = com.madar.launcher.ai.AiInterpreter(parser) { app.contacts.search(it) }
+
+    /** Rows proposed by the local model for [aiQuery]; shown above the rule-based ones. */
+    var aiQuery by mutableStateOf<String?>(null)
+        private set
+    var aiSuggestions by mutableStateOf<List<com.madar.launcher.command.Suggestion>>(emptyList())
+        private set
+
+    private fun askAi(query: String) {
+        aiQuery = query
+        aiSuggestions = emptyList()
+        haptics.tick()
+        uiScope.launch {
+            val now = java.time.LocalDateTime.now()
+            val label = "%s %02d:%02d".fmt(now.dayOfWeek.name.lowercase(), now.hour, now.minute)
+            val out = app.ai.generate(com.madar.launcher.ai.AiInterpreter.prompt(query, label))
+            if (aiQuery != query) return@launch
+            val rows = withContext(Dispatchers.IO) { out?.let(interpreter::interpret).orEmpty() }
+            aiSuggestions = rows.ifEmpty { listOf(com.madar.launcher.command.Suggestion("ما فهمت الطلب", "جرّب تكتبه بطريقة ثانية", "ذكاء", Action.CopyResult(query))) }
+            haptics.completion()
+        }
+    }
 
     var overlay by mutableStateOf<Overlay>(if (app.settings.value.onboarded) Overlay.None else Overlay.Settings)
     var message by mutableStateOf<String?>(null)
@@ -300,6 +326,7 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
             is Action.StartPomodoro -> done { startPomodoro(action.minutes) }
             is Action.SystemPanel -> done { start(Intent(action.intentAction)) }
             Action.Torch -> done { toggleTorch() }
+            is Action.AskAi -> askAi(action.query)
             is Action.ImportBlueprint -> open(Overlay.Template(action.blueprint, importing = true))
             is Action.RunCustom -> done { runCustom(action.command, action.text) }
             Action.OpenDigest -> open(Overlay.Digest)

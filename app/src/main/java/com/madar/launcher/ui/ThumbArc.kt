@@ -163,7 +163,13 @@ fun ThumbArc(c: LauncherController, settings: Settings, mode: Mode, modifier: Mo
                     .quietClick(onLongClick = { c.open(Overlay.Settings) }) { c.haptics.tick(); c.open(Overlay.Palette()) },
                 contentAlignment = Alignment.Center,
             ) {
-                OrbitMark(p.ink, 26.dp, pivot = p.accent.takeIf { it != p.ink } ?: p.signal)
+                val aiState by c.app.ai.state.collectAsState()
+                val pivotColor = p.accent.takeIf { it != p.ink } ?: p.signal
+                if (aiState is com.madar.launcher.ai.AiState.Thinking || aiState is com.madar.launcher.ai.AiState.Loading) {
+                    SpinningOrbit(p.ink, 26.dp, pivotColor)
+                } else {
+                    OrbitMark(p.ink, 26.dp, pivot = pivotColor)
+                }
             }
         }
     }

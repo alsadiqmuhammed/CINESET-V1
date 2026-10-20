@@ -17,6 +17,7 @@ class CommandParser(
     private val contacts: (String) -> List<ContactEntry>,
     private val stacks: () -> List<Stack>,
     private val custom: () -> List<com.madar.launcher.data.CustomCommand> = { emptyList() },
+    private val aiAvailable: () -> Boolean = { false },
 ) {
 
     fun parse(raw: String): List<Suggestion> {
@@ -78,6 +79,9 @@ class CommandParser(
             out += contacts(q).take(2).map { Suggestion("اتصل بـ ${it.name}", it.phone, "اتصال", Action.Call(it)) }
             out += stacks().filter { !it.archived && normalize(it.title).contains(q) }.take(2)
                 .map { Suggestion(it.title, "${it.items.size} عناصر", "مشروع", Action.OpenStack(it)) }
+        }
+        if (aiAvailable() && raw.trim().length >= 4) {
+            out += Suggestion("اسأل الذكاء المحلي", "يفهم الطلبات المركّبة · بدون إنترنت", "ذكاء", Action.AskAi(raw.trim()))
         }
         out += Suggestion("ابحث عن \"${raw.trim()}\"", "بالمتصفح", "بحث", Action.WebSearch(raw.trim()))
         return out.distinctBy { it.action }

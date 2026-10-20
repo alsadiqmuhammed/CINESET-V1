@@ -139,6 +139,8 @@ fun SettingsSheet(c: LauncherController) {
                 Pill("تقرير اليوم") { c.open(Overlay.Report) }
             }
 
+            AiSection(c)
+
             CustomCommandsSection(c, s)
 
             SectionTitle("جدول الأطوار")
@@ -170,7 +172,7 @@ fun SettingsSheet(c: LauncherController) {
 
             Spacer(Modifier.height(24.dp))
             if (!s.onboarded) Pill("يلا نبدأ", selected = true, onClick = close)
-            Text("MADAR 0.3 · OFFLINE · كل شي يبقى بجهازك", style = Type.tech, color = p.faint, modifier = Modifier.padding(vertical = 24.dp))
+            Text("MADAR 0.4 · OFFLINE · كل شي يبقى بجهازك", style = Type.tech, color = p.faint, modifier = Modifier.padding(vertical = 24.dp))
         }
     } }
 }

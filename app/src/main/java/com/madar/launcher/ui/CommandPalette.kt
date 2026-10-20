@@ -126,11 +126,34 @@ fun CommandPalette(c: LauncherController, initial: String, mode: Mode, active: B
             QuickActions { field = TextFieldValue(it, TextRange(it.length)) }
             AppIndex(c, apps, mode)
         } else {
+            val aiState by c.app.ai.state.collectAsState()
+            val asked = c.aiQuery == field.text.trim()
+            val thinking = asked && (aiState is com.madar.launcher.ai.AiState.Loading || aiState is com.madar.launcher.ai.AiState.Thinking)
+            val aiRows = if (asked) c.aiSuggestions else emptyList()
+            val rows = aiRows + suggestions.filterNot { asked && it.action is com.madar.launcher.command.Action.AskAi }
             LazyColumn(Modifier.fillMaxSize().padding(top = 12.dp)) {
-                items(suggestions, key = { it.action.hashCode().toString() + it.title }) { s ->
-                    SuggestionRow(s, first = s === suggestions.firstOrNull()) { c.execute(s.action) }
+                if (thinking) item(key = "thinking") { ThinkingRow(aiState is com.madar.launcher.ai.AiState.Loading) }
+                items(rows, key = { "r" + it.action.hashCode().toString() + it.title }) { s ->
+                    SuggestionRow(s, first = s === rows.firstOrNull()) { c.execute(s.action) }
                 }
             }
+        }
+    }
+}
+
+/** The orbit turns while the local model works: the mark is the progress indicator. */
+@Composable
+private fun ThinkingRow(loading: Boolean) {
+    val p = LocalPalette.current
+    Row(
+        Modifier.fillMaxWidth().matte(p, RoundedCornerShape(16.dp), edge = p.signal.copy(alpha = 0.5f)).padding(horizontal = 14.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SpinningOrbit(p.ink, 24.dp, p.signal)
+        Spacer(Modifier.width(14.dp))
+        Column {
+            Text(if (loading) "مدار يحمّل النموذج…" else "مدار يفكر…", style = Type.title, color = p.ink)
+            Text("ON-DEVICE · OFFLINE", style = Type.tech, color = p.muted)
         }
     }
 }

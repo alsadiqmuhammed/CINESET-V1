@@ -54,6 +54,18 @@ class ScreensTest {
         app.stacks.addItem(s.id, StackItem.Link(newItemId(), "https://booking.com", "booking.com"))
         app.stacks.create("امتحان الإحصاء")
         app.settings.edit { it.copy(onboarded = true) }
+
+        val img = File(rule.activity.cacheDir, "boarding.png")
+        Bitmap.createBitmap(300, 300, Bitmap.Config.ARGB_8888).also { bmp ->
+            val canvas = android.graphics.Canvas(bmp)
+            canvas.drawColor(0xFF2B3A44.toInt())
+            canvas.drawCircle(150f, 130f, 70f, android.graphics.Paint().apply { color = 0xFFE9C46A.toInt() })
+            img.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
+        app.shelf.addStream(android.net.Uri.fromFile(img), "image/png")
+        app.shelf.addText("https://www.booking.com/hotel/iq/erbil-rotana")
+        app.shelf.addText("رقم الحجز: 48213 — الدفع عند الوصول")
+        app.shelf.consumeArrival()
     }
 
     private fun shot(name: String) {

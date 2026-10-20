@@ -111,7 +111,7 @@ fun ThumbArc(c: LauncherController, settings: Settings, mode: Mode, modifier: Mo
                 val pv = Offset(if (right) size.width - inset else inset, size.height - inset)
                 listOf(radius, radius * 0.42f).forEach { r ->
                     drawArc(
-                        color = p.faint,
+                        color = p.stroke,
                         startAngle = if (right) 180f else 270f,
                         sweepAngle = 90f,
                         useCenter = false,
@@ -159,13 +159,11 @@ fun ThumbArc(c: LauncherController, settings: Settings, mode: Mode, modifier: Mo
                     .align(if (right) AbsoluteAlignment.BottomRight else AbsoluteAlignment.BottomLeft)
                     .absoluteOffset { IntOffset(if (right) (-(inset - 30.dp.toPx())).roundToInt() else (inset - 30.dp.toPx()).roundToInt(), (-(inset - 30.dp.toPx())).roundToInt()) }
                     .size(60.dp)
-                    .clip(CircleShape)
-                    .background(p.surface)
-                    .border(1.dp, p.accent.copy(alpha = 0.6f), CircleShape)
+                    .matte(p, CircleShape)
                     .quietClick(onLongClick = { c.open(Overlay.Settings) }) { c.haptics.tick(); c.open(Overlay.Palette()) },
                 contentAlignment = Alignment.Center,
             ) {
-                Text("مدار", style = Type.caption, color = p.accent)
+                OrbitMark(p.ink, 26.dp, pivot = p.accent.takeIf { it != p.ink } ?: p.signal)
             }
         }
     }

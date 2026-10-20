@@ -14,6 +14,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.sp
 import com.madar.launcher.R
 import com.madar.launcher.data.Mode
@@ -26,58 +27,90 @@ val Plex = FontFamily(
     Font(R.font.plex_arabic_semibold, FontWeight.SemiBold),
 )
 
-/** Per-mode palette. Background is always true OLED black; only ink and accent shift. */
+/** Technical monospace for every number: clock, timers, percentages, countdowns. */
+val Mono = FontFamily(
+    Font(R.font.jetbrains_mono_thin, FontWeight.Thin),
+    Font(R.font.jetbrains_mono_light, FontWeight.Light),
+    Font(R.font.jetbrains_mono_regular, FontWeight.Normal),
+    Font(R.font.jetbrains_mono_medium, FontWeight.Medium),
+)
+
+/**
+ * Functional colour coding. The interface is ~90% monochrome; colour only appears as a state signal.
+ *  - [signal]: International Orange — something is running (timers, the shelf, active controls).
+ *  - [calm]: Sage — low energy, the quiet digest.
+ *  - [privacy]: Amber — guarded / private states.
+ * [accent] is the mode's own signal: orange in focus, sage in sanctuary, chalk (no colour) in flow.
+ */
 @Immutable
 data class Palette(
     val background: Color,
+    val surface: Color,
+    val surfaceHigh: Color,
     val ink: Color,
     val muted: Color,
     val faint: Color,
+    val stroke: Color,
+    val highlight: Color,
     val accent: Color,
-    val surface: Color,
+    val signal: Color,
+    val calm: Color,
+    val privacy: Color,
     val danger: Color,
 )
 
-fun paletteFor(mode: Mode): Palette = when (mode) {
-    Mode.FOCUS -> Palette(
-        background = Color.Black,
-        ink = Color(0xFFF2F2F2),
-        muted = Color(0xFF8A8A8A),
-        faint = Color(0xFF3A3A3A),
-        accent = Color(0xFFFFFFFF),
-        surface = Color(0xFF0E0E0E),
-        danger = Color(0xFFFF6B6B),
+object Tokens {
+    val Black = Color(0xFF000000)
+    val Charcoal = Color(0xFF121214)
+    val CharcoalHigh = Color(0xFF161618)
+    val Chalk = Color(0xFFE5E5E7)
+    val Graphite = Color(0xFF8E8E93)
+    val Ash = Color(0xFF3A3A3D)
+    val Stroke = Color(0xFF242427)
+    val Highlight = Color(0x38FFFFFF)
+    val InternationalOrange = Color(0xFFFF5722)
+    val Sage = Color(0xFF81B29A)
+    val Amber = Color(0xFFFFB703)
+}
+
+fun paletteFor(mode: Mode): Palette {
+    val base = Palette(
+        background = Tokens.Black,
+        surface = Tokens.Charcoal,
+        surfaceHigh = Tokens.CharcoalHigh,
+        ink = Tokens.Chalk,
+        muted = Tokens.Graphite,
+        faint = Tokens.Ash,
+        stroke = Tokens.Stroke,
+        highlight = Tokens.Highlight,
+        accent = Tokens.Chalk,
+        signal = Tokens.InternationalOrange,
+        calm = Tokens.Sage,
+        privacy = Tokens.Amber,
+        danger = Tokens.InternationalOrange,
     )
-    Mode.FLOW -> Palette(
-        background = Color.Black,
-        ink = Color(0xFFEDEFEE),
-        muted = Color(0xFF8C9A94),
-        faint = Color(0xFF2B3532),
-        accent = Color(0xFF3DDC97),
-        surface = Color(0xFF0B1210),
-        danger = Color(0xFFFF6B6B),
-    )
-    // No blue light: warm amber ink on black.
-    Mode.SANCTUARY -> Palette(
-        background = Color.Black,
-        ink = Color(0xFFF3DFC1),
-        muted = Color(0xFF9C8466),
-        faint = Color(0xFF3A2E20),
-        accent = Color(0xFFFFB547),
-        surface = Color(0xFF120D07),
-        danger = Color(0xFFFF8A5C),
-    )
+    return when (mode) {
+        Mode.FOCUS -> base.copy(accent = Tokens.InternationalOrange)
+        Mode.FLOW -> base
+        // Evening: chalk dims a touch so nothing glares in the dark.
+        Mode.SANCTUARY -> base.copy(accent = Tokens.Sage, ink = Color(0xFFD6D6D2), muted = Color(0xFF7C7F7A))
+    }
 }
 
 val LocalPalette = staticCompositionLocalOf { paletteFor(Mode.FLOW) }
 
 object Type {
-    val clock = TextStyle(fontFamily = Plex, fontWeight = FontWeight.Thin, fontSize = 96.sp, letterSpacing = (-2).sp)
-    val display = TextStyle(fontFamily = Plex, fontWeight = FontWeight.Light, fontSize = 34.sp, lineHeight = 44.sp)
-    val title = TextStyle(fontFamily = Plex, fontWeight = FontWeight.Medium, fontSize = 20.sp, lineHeight = 30.sp)
-    val body = TextStyle(fontFamily = Plex, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 26.sp)
+    val clock = TextStyle(fontFamily = Mono, fontWeight = FontWeight.Thin, fontSize = 76.sp, lineHeight = 84.sp, letterSpacing = (-3).sp, textDirection = TextDirection.Ltr)
+    val display = TextStyle(fontFamily = Plex, fontWeight = FontWeight.Light, fontSize = 32.sp, lineHeight = 44.sp)
+    val title = TextStyle(fontFamily = Plex, fontWeight = FontWeight.Medium, fontSize = 19.sp, lineHeight = 30.sp)
+    val body = TextStyle(fontFamily = Plex, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 24.sp)
     val label = TextStyle(fontFamily = Plex, fontWeight = FontWeight.Medium, fontSize = 13.sp, lineHeight = 18.sp)
     val caption = TextStyle(fontFamily = Plex, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp)
+
+    /** Engineering labels: tiny uppercase mono, like silkscreen on hardware. */
+    val tech = TextStyle(fontFamily = Mono, fontWeight = FontWeight.Medium, fontSize = 10.sp, letterSpacing = 1.5.sp, textDirection = TextDirection.Ltr)
+    val data = TextStyle(fontFamily = Mono, fontWeight = FontWeight.Light, fontSize = 15.sp, textDirection = TextDirection.Ltr)
+    val dataLarge = TextStyle(fontFamily = Mono, fontWeight = FontWeight.Thin, fontSize = 44.sp, letterSpacing = (-1).sp, textDirection = TextDirection.Ltr)
 }
 
 @Composable
@@ -86,22 +119,20 @@ fun MadarTheme(mode: Mode, content: @Composable () -> Unit) {
     val spec = tween<Color>(durationMillis = 900)
     val ink by animateColorAsState(target.ink, spec, label = "ink")
     val muted by animateColorAsState(target.muted, spec, label = "muted")
-    val faint by animateColorAsState(target.faint, spec, label = "faint")
     val accent by animateColorAsState(target.accent, spec, label = "accent")
-    val surface by animateColorAsState(target.surface, spec, label = "surface")
-    val palette = target.copy(ink = ink, muted = muted, faint = faint, accent = accent, surface = surface)
+    val palette = target.copy(ink = ink, muted = muted, accent = accent)
 
     MaterialTheme(
         colorScheme = darkColorScheme(
             primary = accent,
-            onPrimary = Color.Black,
-            background = Color.Black,
-            surface = surface,
+            onPrimary = Tokens.Black,
+            background = Tokens.Black,
+            surface = target.surface,
             onSurface = ink,
             onBackground = ink,
-            surfaceContainer = surface,
-            surfaceContainerHigh = surface,
-            outline = faint,
+            surfaceContainer = target.surface,
+            surfaceContainerHigh = target.surfaceHigh,
+            outline = target.stroke,
         ),
     ) {
         CompositionLocalProvider(LocalPalette provides palette, content = content)

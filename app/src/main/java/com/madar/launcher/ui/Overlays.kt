@@ -1,5 +1,6 @@
 package com.madar.launcher.ui
 
+import com.madar.launcher.fmt
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -80,7 +81,7 @@ fun IntentGate(c: LauncherController, app: AppEntry, outOfMode: Boolean, mode: M
             Spacer(Modifier.height(28.dp))
             Text("ما غايتك الآن؟", style = Type.display, color = p.ink)
             if (outOfMode) {
-                Text("أنت بطور ${mode.title}", style = Type.body, color = p.accent, modifier = Modifier.padding(top = 6.dp))
+                Text("أنت بطور ${mode.title}", style = Type.body, color = p.signal, modifier = Modifier.padding(top = 6.dp))
             }
             Spacer(Modifier.height(28.dp))
             AnimatedVisibility(unlocked, enter = fadeIn(tween(700))) {
@@ -89,20 +90,19 @@ fun IntentGate(c: LauncherController, app: AppEntry, outOfMode: Boolean, mode: M
                         Row(
                             Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(18.dp))
-                                .border(1.dp, p.faint, RoundedCornerShape(18.dp))
+                                .matte(p, RoundedCornerShape(16.dp))
                                 .quietClick { c.launchWithIntent(app, i.label, i.minutes) }
                                 .padding(horizontal = 20.dp, vertical = 16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(i.label, style = Type.title, color = p.ink, modifier = Modifier.weight(1f))
-                            Text("${i.minutes} دقائق", style = Type.label, color = p.muted)
+                            Text("%02d MIN".fmt(i.minutes), style = Type.tech, color = p.signal)
                         }
                     }
                 }
             }
             Spacer(Modifier.height(24.dp))
-            TextAction("تراجع", color = p.accent, style = Type.title) {
+            TextAction("تراجع", color = p.calm, style = Type.title) {
                 c.haptics.completion()
                 c.close()
                 c.toast("اختيار موفق")

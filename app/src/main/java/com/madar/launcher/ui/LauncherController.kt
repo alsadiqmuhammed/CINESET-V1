@@ -1,5 +1,6 @@
 package com.madar.launcher.ui
 
+import com.madar.launcher.fmt
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ActivityOptions
@@ -19,7 +20,12 @@ import android.os.Environment
 import android.os.Process
 import android.provider.AlarmClock
 import android.provider.Settings as SystemSettings
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.madar.launcher.MadarApp
@@ -106,12 +112,40 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
 
     // region Navigation
 
+    /** Composition-bound scope (it carries the frame clock that spring animations need); set by [MadarRoot]. */
+    lateinit var uiScope: CoroutineScope
+
+    /** 0 = command bar hidden, 1 = fully out. Driven by the finger, then by a spring. */
+    val pull = Animatable(0f)
+
+    private val paletteSpring = spring<Float>(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)
+
     fun open(o: Overlay) {
         overlay = o
+        uiScope.launch { pull.animateTo(if (o is Overlay.Palette) 1f else 0f, paletteSpring) }
     }
 
     fun close() {
+        val wasPalette = overlay is Overlay.Palette
         overlay = Overlay.None
+        if (wasPalette || pull.value > 0f) uiScope.launch { pull.animateTo(0f, paletteSpring) }
+    }
+
+    fun pullPalette(delta: Float) {
+        uiScope.launch { pull.snapTo((pull.value + delta * 1.4f).coerceIn(0f, 1f)) }
+    }
+
+    /** [velocity] in screen-heights per second, positive = upward. */
+    fun releasePalette(velocity: Float) {
+        if (pull.value == 0f && velocity <= 0f) return
+        val opening = pull.value > 0.3f || velocity > 1.2f
+        if (opening) {
+            haptics.tick()
+            overlay = Overlay.Palette()
+        }
+        uiScope.launch {
+            pull.animateTo(if (opening) 1f else 0f, paletteSpring, initialVelocity = velocity)
+        }
     }
 
     fun toast(text: String) {
@@ -137,7 +171,7 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
         val outOfMode = !entry.kind.visibleIn(currentMode)
         if (entry.kind.gated || outOfMode) {
             haptics.heavy()
-            overlay = Overlay.Gate(entry, outOfMode)
+            open(Overlay.Gate(entry, outOfMode))
         } else {
             haptics.light()
             launch(entry, source)
@@ -214,7 +248,7 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
                         .putExtra(AlarmClock.EXTRA_MINUTES, action.minute)
                         .putExtra(AlarmClock.EXTRA_SKIP_UI, true),
                 )
-                toast("المنبه انضبط %02d:%02d".format(action.hour, action.minute))
+                toast("المنبه انضبط %02d:%02d".fmt(action.hour, action.minute))
             }
             is Action.WebSearch -> done {
                 if (!start(Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, action.query), quiet = true)) {

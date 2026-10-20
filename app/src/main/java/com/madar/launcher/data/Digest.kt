@@ -1,5 +1,6 @@
 package com.madar.launcher.data
 
+import com.madar.launcher.fmt
 import android.app.PendingIntent
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,4 +79,4 @@ class DigestRepository(context: Context, private val settings: SettingsStore) {
 }
 
 fun Long.toLocalTimeLabel(): String =
-    Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalTime().let { "%02d:%02d".format(it.hour, it.minute) }
+    Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalTime().let { "%02d:%02d".fmt(it.hour, it.minute) }

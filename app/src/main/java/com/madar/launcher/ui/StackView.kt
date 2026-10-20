@@ -142,7 +142,7 @@ private fun StackHeader(c: LauncherController, stack: Stack) {
         value = title,
         onValueChange = { title = it },
         textStyle = Type.display.copy(color = p.ink),
-        cursorBrush = SolidColor(p.accent),
+        cursorBrush = SolidColor(p.signal),
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
@@ -178,14 +178,13 @@ private fun ItemRow(item: StackItem, resumed: Boolean, onOpen: () -> Unit, onRem
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(if (resumed) p.surface else p.background)
-            .border(1.dp, if (resumed) p.accent.copy(alpha = 0.5f) else p.background, RoundedCornerShape(16.dp))
+            .then(if (resumed) Modifier.matte(p, RoundedCornerShape(16.dp), edge = p.signal.copy(alpha = 0.6f)) else Modifier.matte(p, RoundedCornerShape(16.dp)))
             .quietClick(onLongClick = onRemove, onClick = onOpen)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            if (resumed) Text("وصلت هنا آخر مرة", style = Type.caption, color = p.accent)
+            if (resumed) Text("RESUME · وصلت هنا آخر مرة", style = Type.tech, color = p.signal)
             Text(title, style = Type.title, color = p.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (subtitle.isNotBlank()) Text(subtitle, style = Type.caption, color = p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -211,15 +210,14 @@ private fun NoteEditor(c: LauncherController, stackId: String, note: StackItem.N
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(p.surface)
-            .border(1.dp, p.accent.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+            .matte(p, RoundedCornerShape(16.dp), edge = p.signal.copy(alpha = 0.6f))
             .padding(14.dp),
     ) {
         BasicTextField(
             value = value,
             onValueChange = { value = it },
             textStyle = Type.body.copy(color = p.ink),
-            cursorBrush = SolidColor(p.accent),
+            cursorBrush = SolidColor(p.signal),
             modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
         )
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
@@ -247,8 +245,7 @@ private fun AddPanel(c: LauncherController, adding: Adding, onAdd: (StackItem) -
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(p.surface)
-                .border(1.dp, p.faint, RoundedCornerShape(20.dp))
+                .matte(p, RoundedCornerShape(16.dp))
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -257,7 +254,7 @@ private fun AddPanel(c: LauncherController, adding: Adding, onAdd: (StackItem) -
                 onValueChange = { text = it },
                 singleLine = true,
                 textStyle = Type.body.copy(color = p.ink),
-                cursorBrush = SolidColor(p.accent),
+                cursorBrush = SolidColor(p.signal),
                 decorationBox = { inner ->
                     Box {
                         if (text.isEmpty()) Text(

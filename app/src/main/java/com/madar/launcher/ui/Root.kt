@@ -12,12 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import com.madar.launcher.data.Mode
 
 @Composable
 fun MadarRoot(c: LauncherController) {
+    c.uiScope = rememberCoroutineScope()
     val settings by c.app.settings.state.collectAsState()
     val stacks by c.app.stacks.stacks.collectAsState()
     val digestItems by c.app.digest.items.collectAsState()
@@ -51,7 +56,7 @@ fun MadarRoot(c: LauncherController) {
             ) { o ->
                 when (o) {
                     Overlay.None -> Box(Modifier)
-                    is Overlay.Palette -> CommandPalette(c, o.initial, mode)
+                    is Overlay.Palette -> Box(Modifier)
                     is Overlay.Gate -> IntentGate(c, o.app, o.outOfMode, mode)
                     is Overlay.StackView -> StackView(c, o.id)
                     is Overlay.AppMenu -> AppMenu(c, o.app)
@@ -60,7 +65,28 @@ fun MadarRoot(c: LauncherController) {
                     Overlay.Archive -> ArchiveSheet(c)
                 }
             }
+            PaletteLayer(c, mode)
             Toast(c.message) { c.message = null }
         }
+    }
+}
+
+/** The command bar rides on [LauncherController.pull] so it can follow the finger and spring with its velocity. */
+@Composable
+private fun PaletteLayer(c: LauncherController, mode: Mode) {
+    val pull = c.pull.value
+    val overlay = c.overlay
+    var lastInitial by remember { mutableStateOf("") }
+    if (overlay is Overlay.Palette) lastInitial = overlay.initial
+    if (pull <= 0.001f && overlay !is Overlay.Palette) return
+    Box(
+        Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                translationY = (1f - pull) * size.height * 0.6f
+                alpha = pull.coerceIn(0f, 1f)
+            },
+    ) {
+        CommandPalette(c, lastInitial, mode, active = overlay is Overlay.Palette && pull > 0.95f)
     }
 }

@@ -131,7 +131,7 @@ fun SettingsSheet(c: LauncherController) {
 
             Spacer(Modifier.height(24.dp))
             if (!s.onboarded) Pill("يلا نبدأ", selected = true, onClick = close)
-            Text("مدار 0.1 · بدون إنترنت، كل شي يبقى بجهازك", style = Type.caption, color = p.faint, modifier = Modifier.padding(vertical = 24.dp))
+            Text("MADAR 0.2 · OFFLINE · كل شي يبقى بجهازك", style = Type.tech, color = p.faint, modifier = Modifier.padding(vertical = 24.dp))
         }
     } }
 }
@@ -143,10 +143,10 @@ private fun Check(label: String, ok: Boolean, onFix: () -> Unit) {
         Modifier.fillMaxWidth().quietClick(onClick = onFix).padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Dot(if (ok) p.accent else p.danger)
+        Dot(if (ok) p.calm else p.signal)
         Spacer(Modifier.width(12.dp))
         Text(label, style = Type.body, color = p.ink, modifier = Modifier.weight(1f))
-        Text(if (ok) "جاهز" else "تفعيل", style = Type.label, color = if (ok) p.muted else p.accent)
+        Text(if (ok) "READY" else "SET", style = Type.tech, color = if (ok) p.calm else p.signal)
     }
 }
 
@@ -159,7 +159,7 @@ private fun TimeRow(label: String, value: Int, onPick: (Int) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, style = Type.body, color = p.ink, modifier = Modifier.weight(1f))
-        Text(value.format(), style = Type.title, color = p.accent)
+        Text(value.format(), style = Type.data, color = p.ink)
     }
 }
 
@@ -168,7 +168,7 @@ private fun Hint(text: String, onClick: () -> Unit) {
     val p = LocalPalette.current
     Column(Modifier.quietClick(onClick = onClick).padding(vertical = 6.dp)) {
         Text(text, style = Type.caption, color = p.muted)
-        Text("افتح الإعدادات", style = Type.label, color = p.accent, modifier = Modifier.padding(top = 4.dp))
+        Text("افتح الإعدادات", style = Type.label, color = p.signal, modifier = Modifier.padding(top = 4.dp))
     }
 }
 

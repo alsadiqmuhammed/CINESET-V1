@@ -1,7 +1,6 @@
 package com.madar.launcher.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -62,13 +61,14 @@ fun Modifier.quietClick(onLongClick: (() -> Unit)? = null, onClick: () -> Unit):
 
 @Composable
 fun Tag(text: String, color: Color = LocalPalette.current.muted) {
+    val p = LocalPalette.current
     Text(
         text = text,
         style = Type.caption,
         color = color,
         modifier = Modifier
-            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(50))
-            .padding(horizontal = 10.dp, vertical = 2.dp),
+            .etched(p, RoundedCornerShape(6.dp), color.copy(alpha = 0.35f))
+            .padding(horizontal = 8.dp, vertical = 1.dp),
     )
 }
 
@@ -77,19 +77,19 @@ fun Dot(color: Color, size: Dp = 8.dp) {
     Box(Modifier.size(size).clip(CircleShape).background(color))
 }
 
+/** Hardware-style key: matte when idle, filled with the mode signal when engaged. */
 @Composable
-fun Pill(text: String, selected: Boolean = false, onClick: () -> Unit) {
+fun Pill(text: String, selected: Boolean = false, color: Color = LocalPalette.current.accent, onClick: () -> Unit) {
     val p = LocalPalette.current
+    val shape = RoundedCornerShape(12.dp)
     Text(
         text = text,
         style = Type.label,
         color = if (selected) p.background else p.ink,
         modifier = Modifier
-            .clip(RoundedCornerShape(50))
-            .background(if (selected) p.accent else p.surface)
-            .border(1.dp, if (selected) p.accent else p.faint, RoundedCornerShape(50))
+            .then(if (selected) Modifier.clip(shape).background(color, shape) else Modifier.matte(p, shape))
             .quietClick(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 9.dp),
     )
 }
 
@@ -98,13 +98,18 @@ fun TextAction(text: String, color: Color = LocalPalette.current.accent, style: 
     Text(text, style = style, color = color, modifier = Modifier.quietClick(onClick = onClick).padding(vertical = 8.dp, horizontal = 4.dp))
 }
 
+/** Section header set like silkscreen on a device: a mono code, a hairline, then the Arabic name. */
 @Composable
-fun SectionTitle(text: String, modifier: Modifier = Modifier) {
+fun SectionTitle(text: String, modifier: Modifier = Modifier, code: String? = null) {
     val p = LocalPalette.current
-    Row(modifier.padding(top = 24.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.width(3.dp).height(14.dp).background(p.accent))
-        Spacer(Modifier.width(10.dp))
+    Row(modifier.fillMaxWidth().padding(top = 26.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(text, style = Type.label, color = p.muted)
+        Spacer(Modifier.width(10.dp))
+        Box(Modifier.weight(1f).height(1.dp).background(p.stroke))
+        if (code != null) {
+            Spacer(Modifier.width(10.dp))
+            Text(code, style = Type.tech, color = p.faint)
+        }
     }
 }
 
@@ -151,9 +156,7 @@ fun Toast(message: String?, onShown: () -> Unit) {
             style = Type.label,
             color = p.ink,
             modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .background(p.surface)
-                .border(1.dp, p.faint, RoundedCornerShape(50))
+                .matte(p, RoundedCornerShape(14.dp), fill = p.surfaceHigh)
                 .padding(horizontal = 20.dp, vertical = 12.dp),
         )
     }

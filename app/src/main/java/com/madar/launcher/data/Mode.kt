@@ -1,5 +1,6 @@
 package com.madar.launcher.data
 
+import com.madar.launcher.fmt
 import java.time.LocalTime
 
 /** The three cognitive modes the home screen morphs between. */
@@ -14,7 +15,7 @@ typealias DayMinute = Int
 
 fun LocalTime.toDayMinute(): DayMinute = hour * 60 + minute
 
-fun DayMinute.format(): String = "%02d:%02d".format(this / 60, this % 60)
+fun DayMinute.format(): String = "%02d:%02d".fmt(this / 60, this % 60)
 
 data class ModeSchedule(
     val focusStart: DayMinute = 9 * 60,

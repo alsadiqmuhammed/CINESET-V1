@@ -70,6 +70,7 @@ class MainActivity : ComponentActivity() {
         val app = application as MadarApp
         app.stacks.archiveExpired()
         app.contacts.invalidate()
+        app.shelf.purge()
     }
 
     /** Pressing Home while already home returns to the clean surface. */

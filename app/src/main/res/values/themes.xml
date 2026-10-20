@@ -6,4 +6,12 @@
         <item name="android:colorAccent">#FF3DDC97</item>
         <item name="android:windowLayoutInDisplayCutoutMode">always</item>
     </style>
+
+    <style name="Theme.Madar.Translucent" parent="Theme.Madar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 </resources>

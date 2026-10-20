@@ -14,8 +14,8 @@ android {
         // Built for realme GT 8 Pro (Android 16); 33 makes media permissions and themed icons unconditional.
         minSdk = 33
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     buildTypes {

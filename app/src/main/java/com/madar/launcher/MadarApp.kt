@@ -6,6 +6,7 @@ import com.madar.launcher.data.ContactsRepository
 import com.madar.launcher.data.DigestRepository
 import com.madar.launcher.data.RecentMedia
 import com.madar.launcher.data.SettingsStore
+import com.madar.launcher.data.ShelfRepository
 import com.madar.launcher.data.StacksRepository
 import com.madar.launcher.service.Reminders
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,7 @@ class MadarApp : Application() {
     lateinit var digest: DigestRepository private set
     lateinit var contacts: ContactsRepository private set
     lateinit var media: RecentMedia private set
+    lateinit var shelf: ShelfRepository private set
 
     override fun onCreate() {
         super.onCreate()
@@ -31,6 +33,7 @@ class MadarApp : Application() {
         digest = DigestRepository(this, settings)
         contacts = ContactsRepository(this)
         media = RecentMedia(this)
+        shelf = ShelfRepository(this)
         Reminders.createChannel(this)
     }
 }

@@ -1,5 +1,6 @@
 package com.madar.launcher.command
 
+import com.madar.launcher.fmt
 import android.provider.Settings as SystemSettings
 import com.madar.launcher.data.AppEntry
 import com.madar.launcher.data.ContactEntry
@@ -40,7 +41,7 @@ class CommandParser(
             }
             head in REMIND -> parseReminder(rest)?.let { out += it }
             head in ALARM -> parseClock(rest)?.let { (h, m) ->
-                out += Suggestion("منبه %02d:%02d".format(h, m), "يتضبط بساعة الجهاز", "منبه", Action.SetAlarm(h, m, ""))
+                out += Suggestion("منبه %02d:%02d".fmt(h, m), "يتضبط بساعة الجهاز", "منبه", Action.SetAlarm(h, m, ""))
             }
             head in SEARCH && rest.isNotEmpty() -> out += Suggestion("ابحث عن \"$rest\"", "بالمتصفح", "بحث", Action.WebSearch(rest))
             head in YOUTUBE && rest.isNotEmpty() -> out += Suggestion("يوتيوب: $rest", "بحث في يوتيوب", "بحث", Action.YoutubeSearch(rest))

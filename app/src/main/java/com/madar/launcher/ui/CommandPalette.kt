@@ -37,6 +37,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
@@ -51,7 +52,7 @@ import kotlinx.coroutines.withContext
 
 /** The command bar: type (or speak) an intention, get the result directly instead of hunting for an icon. */
 @Composable
-fun CommandPalette(c: LauncherController, initial: String, mode: Mode) {
+fun CommandPalette(c: LauncherController, initial: String, mode: Mode, active: Boolean = true) {
     val p = LocalPalette.current
     var field by remember(initial) { mutableStateOf(TextFieldValue(initial, TextRange(initial.length))) }
     var suggestions by remember { mutableStateOf<List<Suggestion>>(emptyList()) }
@@ -59,7 +60,10 @@ fun CommandPalette(c: LauncherController, initial: String, mode: Mode) {
     val focus = remember { FocusRequester() }
     val apps by c.app.apps.apps.collectAsState()
 
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(active) {
+        if (active) focus.requestFocus() else keyboard?.hide()
+    }
     LaunchedEffect(field.text, contactsAllowed) {
         suggestions = if (field.text.isBlank()) emptyList() else withContext(Dispatchers.IO) { c.parser.parse(field.text) }
     }
@@ -76,10 +80,8 @@ fun CommandPalette(c: LauncherController, initial: String, mode: Mode) {
             Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(p.surface)
-                .border(1.dp, p.accent.copy(alpha = 0.5f), RoundedCornerShape(28.dp))
-                .padding(horizontal = 20.dp, vertical = 14.dp),
+                .matte(p, RoundedCornerShape(18.dp), edge = p.signal.copy(alpha = 0.55f))
+                .padding(horizontal = 18.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             BasicTextField(
@@ -87,7 +89,7 @@ fun CommandPalette(c: LauncherController, initial: String, mode: Mode) {
                 onValueChange = { field = it },
                 singleLine = true,
                 textStyle = Type.title.copy(color = p.ink),
-                cursorBrush = SolidColor(p.accent),
+                cursorBrush = SolidColor(p.signal),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                 keyboardActions = KeyboardActions(onGo = { suggestions.firstOrNull()?.let { c.execute(it.action) } }),
                 decorationBox = { inner ->
@@ -148,8 +150,7 @@ private fun SuggestionRow(s: Suggestion, first: Boolean, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (first) p.surface else p.background)
+            .then(if (first) Modifier.matte(p, RoundedCornerShape(16.dp)) else Modifier)
             .quietClick(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -162,7 +163,7 @@ private fun SuggestionRow(s: Suggestion, first: Boolean, onClick: () -> Unit) {
             Text(s.title, style = Type.title, color = p.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(s.subtitle, style = Type.caption, color = p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Tag(s.tag, if (first) p.accent else p.muted)
+        Tag(s.tag, if (first) p.signal else p.muted)
     }
 }
 

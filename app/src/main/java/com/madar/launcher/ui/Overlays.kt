@@ -214,7 +214,8 @@ fun AppMenu(c: LauncherController, app: AppEntry) {
 @Composable
 fun DigestSheet(c: LauncherController) {
     val p = LocalPalette.current
-    val items by c.app.digest.items.collectAsState()
+    val all by c.app.digest.items.collectAsState()
+    val items = all.filterNot { it.vault }
     LaunchedEffect(Unit) { c.app.digest.markViewed() }
     Sheet(
         "الملخص الهادئ",

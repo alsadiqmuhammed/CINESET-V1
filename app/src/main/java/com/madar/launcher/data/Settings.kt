@@ -38,6 +38,8 @@ data class Settings(
     /** Previous system colour-correction state, saved while Madar has the screen in grayscale. */
     val grayscaleHeld: Boolean = false,
     val previousDaltonizerMode: Int = -1,
+    /** Ghost space: packages that exist only inside the vault. */
+    val hiddenPackages: Set<String> = emptySet(),
 ) {
     val schedule get() = ModeSchedule(focusStart, focusEnd, sanctuaryStart, sanctuaryEnd)
 

@@ -19,7 +19,10 @@ class DigestListenerService : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val settings = app.settings.value
-        if (!settings.digestEnabled || !shouldCollect(sbn)) return
+        val hidden = sbn.packageName in settings.hiddenPackages
+        // Ghost-space apps never surface in the shade; their messages wait inside the vault.
+        if (!hidden && (!settings.digestEnabled || !shouldCollect(sbn))) return
+        if (hidden && (sbn.isOngoing || !sbn.isClearable)) return
 
         val extras = sbn.notification.extras
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
@@ -36,6 +39,7 @@ class DigestListenerService : NotificationListenerService() {
                 title = title,
                 text = text,
                 postedAt = sbn.postTime,
+                vault = hidden,
             ).apply { contentIntent = sbn.notification.contentIntent },
         )
         cancelNotification(sbn.key)

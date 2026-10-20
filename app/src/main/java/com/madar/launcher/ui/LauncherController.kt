@@ -55,6 +55,7 @@ sealed interface Overlay {
     data object Settings : Overlay
     data object Archive : Overlay
     data object Report : Overlay
+    data object Vault : Overlay
 }
 
 /** Owns overlay navigation and executes every [Action]; the single place UI talks to the system. */
@@ -151,6 +152,17 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
     }
 
     fun listen(onText: (String) -> Unit) = activity.listen(onText)
+
+    /** The orbit gesture was drawn: undo any accidental pull, then ask for biometrics. */
+    fun requestVault() {
+        if (overlay != Overlay.None && overlay !is Overlay.Palette) return
+        close()
+        haptics.heavy()
+        activity.unlockVault {
+            haptics.completion()
+            open(Overlay.Vault)
+        }
+    }
 
     fun requestPermissions(permissions: Array<String>, then: () -> Unit) = activity.requestPermissions(permissions, then)
 

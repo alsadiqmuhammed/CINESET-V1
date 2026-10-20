@@ -102,6 +102,7 @@ fun HomeScreen(c: LauncherController, settings: Settings, mode: Mode, stacks: Li
                     onDragCancel = { c.releasePalette(0f) },
                 )
             }
+            .orbitGesture { c.requestVault() }
             .pointerInput(Unit) {
                 detectTapGestures(onLongPress = { c.haptics.heavy(); c.open(Overlay.Settings) })
             },

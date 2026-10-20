@@ -24,6 +24,8 @@ data class DigestItem(
     val title: String,
     val text: String,
     val postedAt: Long,
+    /** From a ghost-space app: only ever shown inside the vault. */
+    val vault: Boolean = false,
 ) {
     /** Only valid while the process that captured it lives; falls back to opening the app. */
     @Transient var contentIntent: PendingIntent? = null
@@ -42,13 +44,13 @@ class DigestRepository(context: Context, private val settings: SettingsStore) {
 
     fun remove(key: String) = mutate { list -> list.filterNot { it.key == key } }
 
-    fun clear() = mutate { emptyList() }
+    fun clear(vault: Boolean = false) = mutate { list -> list.filterNot { it.vault == vault } }
 
     fun markViewed() = settings.edit { it.copy(lastDigestViewedAt = System.currentTimeMillis()) }
 
     /** The capsule opens once the most recent digest slot has passed and hasn't been viewed since. */
     fun isCapsuleOpen(s: Settings, now: ZonedDateTime = ZonedDateTime.now()): Boolean {
-        if (_items.value.isEmpty()) return false
+        if (_items.value.none { !it.vault }) return false
         val lastSlot = lastSlotBefore(s.digestTimes, now) ?: return false
         return s.lastDigestViewedAt < lastSlot
     }

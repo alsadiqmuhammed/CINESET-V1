@@ -44,7 +44,7 @@ fun MadarRoot(c: LauncherController) {
                 mode = mode,
                 stacks = stacks,
                 digestOpen = remember(settings, digestItems, now) { c.app.digest.isCapsuleOpen(settings) },
-                digestCount = digestItems.size,
+                digestCount = digestItems.count { !it.vault },
             )
             AnimatedContent(
                 targetState = c.overlay,
@@ -64,6 +64,7 @@ fun MadarRoot(c: LauncherController) {
                     Overlay.Settings -> SettingsSheet(c)
                     Overlay.Archive -> ArchiveSheet(c)
                     Overlay.Report -> ReportSheet(c)
+                    Overlay.Vault -> VaultSheet(c)
                 }
             }
             PaletteLayer(c, mode)

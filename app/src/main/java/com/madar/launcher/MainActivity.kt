@@ -12,6 +12,10 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.lifecycleScope
+import android.view.WindowManager
+import kotlinx.coroutines.launch
 import com.madar.launcher.ui.LauncherController
 import com.madar.launcher.ui.MadarRoot
 import com.madar.launcher.ui.Overlay
@@ -63,6 +67,20 @@ class MainActivity : ComponentActivity() {
         })
 
         setContent { MadarRoot(controller) }
+
+        // While the vault is open the window is secure: no screenshots, no recents thumbnail.
+        lifecycleScope.launch {
+            snapshotFlow { controller.overlay is Overlay.Vault }.collect { secure ->
+                if (secure) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        }
+    }
+
+    /** The vault never survives leaving the launcher. */
+    override fun onStop() {
+        super.onStop()
+        if (controller.overlay is Overlay.Vault) controller.close()
     }
 
     override fun onResume() {

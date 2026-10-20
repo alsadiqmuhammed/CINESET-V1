@@ -119,5 +119,11 @@ class ScreensTest {
         shot("6-settings")
         on { controller.open(Overlay.Report) }
         shot("7-report")
+        on {
+            app.apps.setHidden(app.apps.apps.value.first { it.packageName == "com.instagram.android" }, true)
+            app.digest.add(com.madar.launcher.data.DigestItem("k1", "com.instagram.android", "Instagram", "سارة", "شفت الصورة؟", System.currentTimeMillis(), vault = true))
+            controller.open(Overlay.Vault)
+        }
+        shot("8-vault")
     }
 }

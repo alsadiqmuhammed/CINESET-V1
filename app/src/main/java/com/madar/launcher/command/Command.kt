@@ -31,6 +31,7 @@ sealed interface Action {
     data class StartPomodoro(val minutes: Int, val task: String) : Action
     data class SystemPanel(val intentAction: String) : Action
     data object Torch : Action
+    data class ImportBlueprint(val blueprint: com.madar.launcher.data.Blueprint) : Action
     data class RunCustom(val command: com.madar.launcher.data.CustomCommand, val text: String) : Action
     data object OpenDigest : Action
     data object OpenSettings : Action

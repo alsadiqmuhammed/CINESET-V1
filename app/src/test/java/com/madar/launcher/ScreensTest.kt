@@ -10,6 +10,7 @@ import com.madar.launcher.data.AppKind
 import com.madar.launcher.data.Mode
 import com.madar.launcher.data.StackItem
 import com.madar.launcher.data.newItemId
+import com.madar.launcher.data.toBlueprint
 import com.madar.launcher.ui.Overlay
 import org.junit.Rule
 import org.junit.Test
@@ -119,6 +120,8 @@ class ScreensTest {
         shot("6-settings")
         on { controller.open(Overlay.Report) }
         shot("7-report")
+        on { controller.open(Overlay.Template(app.stacks.stacks.value.first().toBlueprint(), importing = false)) }
+        shot("9-blueprint")
         on {
             app.apps.setHidden(app.apps.apps.value.first { it.packageName == "com.instagram.android" }, true)
             app.digest.add(com.madar.launcher.data.DigestItem("k1", "com.instagram.android", "Instagram", "سارة", "شفت الصورة؟", System.currentTimeMillis(), vault = true))

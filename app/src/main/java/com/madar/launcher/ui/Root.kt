@@ -65,6 +65,7 @@ fun MadarRoot(c: LauncherController) {
                     Overlay.Archive -> ArchiveSheet(c)
                     Overlay.Report -> ReportSheet(c)
                     Overlay.Vault -> VaultSheet(c)
+                    is Overlay.Template -> BlueprintSheet(c, o.blueprint, o.importing)
                 }
             }
             PaletteLayer(c, mode)

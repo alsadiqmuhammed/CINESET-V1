@@ -54,6 +54,15 @@ class ShareToShelfActivity : ComponentActivity() {
         val app = application as MadarApp
         val haptics = Haptics(this)
         val preview = previewText(intent)
+        blueprintIn(intent)?.let { bp ->
+            startActivity(
+                Intent(this, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .putExtra(MainActivity.EXTRA_BLUEPRINT, com.madar.launcher.data.BlueprintCodec.encode(bp)),
+            )
+            finish()
+            return
+        }
 
         setContent {
             MadarTheme(Mode.FLOW) {
@@ -110,6 +119,20 @@ class ShareToShelfActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    /** Shared blueprint text or a photo of its QR opens the import sheet instead of landing on the shelf. */
+    private fun blueprintIn(intent: Intent): com.madar.launcher.data.Blueprint? {
+        if (intent.action != Intent.ACTION_SEND) return null
+        intent.getStringExtra(Intent.EXTRA_TEXT)?.let { com.madar.launcher.data.BlueprintCodec.decode(it)?.let { bp -> return bp } }
+        val stream = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java) ?: return null
+        if (intent.type?.startsWith("image/") != true) return null
+        return runCatching {
+            contentResolver.openInputStream(stream)?.use { input ->
+                val opts = android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }
+                android.graphics.BitmapFactory.decodeStream(input, null, opts)
+            }?.let { com.madar.launcher.data.BlueprintCodec.fromImage(it) }
+        }.getOrNull()
     }
 
     private fun store(app: MadarApp, intent: Intent) {

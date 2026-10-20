@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.madar.launcher.data.Stack
 import com.madar.launcher.data.StackItem
 import com.madar.launcher.data.newItemId
+import com.madar.launcher.data.toBlueprint
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
@@ -73,6 +74,7 @@ fun StackView(c: LauncherController, id: String) {
         title = "",
         onClose = c::close,
         trailing = {
+            TextAction("قالب", color = p.muted) { c.open(Overlay.Template(stack.toBlueprint(), importing = false)) }
             if (!stack.archived) TextAction("إنهاء وأرشفة", color = p.muted) {
                 c.app.stacks.update(id) { it.copy(archived = true) }
                 c.haptics.completion()

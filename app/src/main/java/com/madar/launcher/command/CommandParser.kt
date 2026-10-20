@@ -28,6 +28,10 @@ class CommandParser(
 
         val out = mutableListOf<Suggestion>()
 
+        com.madar.launcher.data.BlueprintCodec.decode(raw)?.let {
+            return listOf(Suggestion("استيراد قالب", "من نص مدار", "قالب", Action.ImportBlueprint(it)))
+        }
+
         // The user's own commands come first: they asked for exactly this phrase.
         custom().forEach { cmd ->
             val phrase = normalize(cmd.phrase)

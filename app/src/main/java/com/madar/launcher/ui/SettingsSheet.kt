@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.madar.launcher.data.Mode
 import com.madar.launcher.data.format
+import com.madar.launcher.data.toBlueprint
 import com.madar.launcher.service.DigestListenerService
 import com.madar.launcher.service.FrictionService
 import com.madar.launcher.service.Grayscale
@@ -161,6 +162,7 @@ fun SettingsSheet(c: LauncherController) {
             SectionTitle("أخرى")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Pill("أرشيف المشاريع") { c.open(Overlay.Archive) }
+                Pill("مشاركة الأطوار كقالب") { c.open(Overlay.Template(s.toBlueprint(), importing = false)) }
                 Pill("الملخص") { c.open(Overlay.Digest) }
             }
 

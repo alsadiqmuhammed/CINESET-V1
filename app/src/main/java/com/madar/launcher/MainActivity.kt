@@ -67,6 +67,7 @@ class MainActivity : ComponentActivity() {
         })
 
         setContent { MadarRoot(controller) }
+        handleBlueprint(intent)
 
         // While the vault is open the window is secure: no screenshots, no recents thumbnail.
         lifecycleScope.launch {
@@ -94,7 +95,20 @@ class MainActivity : ComponentActivity() {
     /** Pressing Home while already home returns to the clean surface. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        if (handleBlueprint(intent)) return
         if (controller.overlay !is Overlay.Settings || (application as MadarApp).settings.value.onboarded) controller.close()
+    }
+
+    private fun handleBlueprint(intent: Intent): Boolean {
+        val code = intent.getStringExtra(EXTRA_BLUEPRINT) ?: return false
+        intent.removeExtra(EXTRA_BLUEPRINT)
+        val bp = com.madar.launcher.data.BlueprintCodec.decode(code) ?: return false
+        controller.open(Overlay.Template(bp, importing = true))
+        return true
+    }
+
+    companion object {
+        const val EXTRA_BLUEPRINT = "com.madar.launcher.BLUEPRINT"
     }
 
     fun requestPermission(permission: String, callback: (Boolean) -> Unit) {

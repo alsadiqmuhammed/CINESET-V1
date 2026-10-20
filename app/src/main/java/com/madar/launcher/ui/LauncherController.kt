@@ -56,6 +56,7 @@ sealed interface Overlay {
     data object Archive : Overlay
     data object Report : Overlay
     data object Vault : Overlay
+    data class Template(val blueprint: com.madar.launcher.data.Blueprint, val importing: Boolean) : Overlay
 }
 
 /** Owns overlay navigation and executes every [Action]; the single place UI talks to the system. */
@@ -122,17 +123,24 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
 
     fun open(o: Overlay) {
         overlay = o
-        uiScope.launch { pull.animateTo(if (o is Overlay.Palette) 1f else 0f, paletteSpring) }
+        animatePull(if (o is Overlay.Palette) 1f else 0f)
+    }
+
+    /** Before the first composition (e.g. opened from a share) there is no frame clock yet; snap instead. */
+    private fun animatePull(target: Float, velocity: Float = 0f) {
+        if (::uiScope.isInitialized) {
+            uiScope.launch { pull.animateTo(target, paletteSpring, initialVelocity = velocity) }
+        }
     }
 
     fun close() {
         val wasPalette = overlay is Overlay.Palette
         overlay = Overlay.None
-        if (wasPalette || pull.value > 0f) uiScope.launch { pull.animateTo(0f, paletteSpring) }
+        if (wasPalette || pull.value > 0f) animatePull(0f)
     }
 
     fun pullPalette(delta: Float) {
-        uiScope.launch { pull.snapTo((pull.value + delta * 1.4f).coerceIn(0f, 1f)) }
+        if (::uiScope.isInitialized) uiScope.launch { pull.snapTo((pull.value + delta * 1.4f).coerceIn(0f, 1f)) }
     }
 
     /** [velocity] in screen-heights per second, positive = upward. */
@@ -143,9 +151,7 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
             haptics.tick()
             overlay = Overlay.Palette()
         }
-        uiScope.launch {
-            pull.animateTo(if (opening) 1f else 0f, paletteSpring, initialVelocity = velocity)
-        }
+        animatePull(if (opening) 1f else 0f, velocity)
     }
 
     fun toast(text: String) {
@@ -293,6 +299,7 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
             is Action.StartPomodoro -> done { startPomodoro(action.minutes) }
             is Action.SystemPanel -> done { start(Intent(action.intentAction)) }
             Action.Torch -> done { toggleTorch() }
+            is Action.ImportBlueprint -> open(Overlay.Template(action.blueprint, importing = true))
             is Action.RunCustom -> done { runCustom(action.command, action.text) }
             Action.OpenDigest -> open(Overlay.Digest)
             Action.OpenSettings -> open(Overlay.Settings)

@@ -6,3 +6,4 @@ local.properties
 .kotlin/
 *.apk
 screens/
+keystore/*.jks

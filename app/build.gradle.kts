@@ -18,13 +18,23 @@ android {
         versionName = "0.3.0"
     }
 
+    // The one key every installed Madar build carries; see keystore/README.md. Never committed.
+    val madarKeystore = file(System.getenv("MADAR_KEYSTORE") ?: rootProject.file("keystore/madar.jks").path)
+    signingConfigs {
+        create("madar") {
+            storeFile = madarKeystore
+            storePassword = System.getenv("MADAR_KEYSTORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("MADAR_KEY_ALIAS") ?: "androiddebugkey"
+            keyPassword = System.getenv("MADAR_KEY_PASSWORD") ?: "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Personal sideloaded build: signed with the debug key so it installs directly.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("madar")
         }
     }
 
@@ -47,6 +57,14 @@ android {
             it.systemProperty("madar.screens", rootProject.file("screens").absolutePath)
             it.maxHeapSize = "3g"
         }
+    }
+}
+
+// Refuse to sign a release with any other key: the phone would reject it as an update.
+tasks.matching { it.name == "packageRelease" }.configureEach {
+    doFirst {
+        val ks = android.signingConfigs.getByName("madar").storeFile
+        check(ks != null && ks.exists()) { "Missing keystore/madar.jks — restore the Madar signing key first (see keystore/README.md)." }
     }
 }
 

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <gradient
+                android:angle="270"
+                android:centerColor="@color/bg_mid"
+                android:endColor="@color/bg_bottom"
+                android:startColor="@color/bg_top" />
+        </shape>
+    </item>
+    <!-- Red projector glow from the top -->
+    <item>
+        <shape>
+            <gradient
+                android:centerX="0.5"
+                android:centerY="0.0"
+                android:endColor="#00000000"
+                android:gradientRadius="900dp"
+                android:startColor="#55E50914"
+                android:type="radial" />
+        </shape>
+    </item>
+    <!-- Warm gold glow at the bottom corner -->
+    <item>
+        <shape>
+            <gradient
+                android:centerX="1.0"
+                android:centerY="1.0"
+                android:endColor="#00000000"
+                android:gradientRadius="500dp"
+                android:startColor="#22F5C518"
+                android:type="radial" />
+        </shape>
+    </item>
+</layer-list>

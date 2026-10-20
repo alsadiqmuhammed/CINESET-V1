@@ -34,6 +34,7 @@ sealed interface Action {
     data object OpenDigest : Action
     data object OpenSettings : Action
     data object OpenArchive : Action
+    data object OpenReport : Action
     data object OpenDrawer : Action
 }
 

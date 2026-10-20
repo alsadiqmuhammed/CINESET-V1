@@ -242,7 +242,13 @@ private fun PolymorphicWidget(c: LauncherController, settings: Settings, mode: M
             mode == Mode.SANCTUARY -> {
                 Text("REST · %s".fmt(c.nextAlarm()?.let { "ALARM ${formatClock(context, it)}" } ?: "NO ALARM"), style = Type.tech, color = p.muted)
                 Text("وقت السكون", style = Type.title, color = p.ink)
-                Text("خلي الشاشة تهدأ ويّاك.", style = Type.body, color = p.muted)
+                val today = c.app.friction.todayStats()
+                Text(
+                    if (today.prompts == 0) "خلي الشاشة تهدأ ويّاك."
+                    else "اليوم: %d د على المشتتات · تراجعت %d مرات".fmt(today.actualMs / 60_000, today.retreats),
+                    style = Type.body, color = p.muted,
+                    modifier = Modifier.quietClick { c.open(Overlay.Report) },
+                )
                 CalmLinks(c, apps.filter { it.kind == AppKind.CALM })
             }
             else -> {

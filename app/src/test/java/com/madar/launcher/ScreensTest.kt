@@ -66,6 +66,12 @@ class ScreensTest {
         app.shelf.addText("https://www.booking.com/hotel/iq/erbil-rotana")
         app.shelf.addText("رقم الحجز: 48213 — الدفع عند الوصول")
         app.shelf.consumeArrival()
+
+        app.friction.recordPrompt(); app.friction.recordPrompt(); app.friction.recordPrompt()
+        app.friction.recordRetreat("com.instagram.android"); app.friction.recordRetreat("com.instagram.android")
+        app.friction.startSession("com.instagram.android", "رد على رسالة", 3)
+        app.friction.recordUsage("com.instagram.android", 9 * 60_000L, 6 * 60_000L)
+        app.friction.recordUsage("com.google.android.youtube", 14 * 60_000L, 0)
     }
 
     private fun shot(name: String) {
@@ -103,5 +109,7 @@ class ScreensTest {
         shot("5-stack")
         on { controller.open(Overlay.Settings) }
         shot("6-settings")
+        on { controller.open(Overlay.Report) }
+        shot("7-report")
     }
 }

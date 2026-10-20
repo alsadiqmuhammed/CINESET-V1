@@ -41,6 +41,7 @@ import com.madar.launcher.data.Settings
 import com.madar.launcher.data.StackItem
 import com.madar.launcher.data.newItemId
 import com.madar.launcher.data.toDayMinute
+import com.madar.launcher.service.FrictionService
 import com.madar.launcher.service.Reminders
 import java.time.LocalTime
 
@@ -53,6 +54,7 @@ sealed interface Overlay {
     data object Digest : Overlay
     data object Settings : Overlay
     data object Archive : Overlay
+    data object Report : Overlay
 }
 
 /** Owns overlay navigation and executes every [Action]; the single place UI talks to the system. */
@@ -85,11 +87,7 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
 
     // region Modes
 
-    fun modeFor(settings: Settings, nowMillis: Long = System.currentTimeMillis()): Mode {
-        val override = settings.modeOverride
-        if (override != null && nowMillis / 60_000 < settings.overrideUntil) return override
-        return settings.schedule.modeAt(LocalTime.now().toDayMinute())
-    }
+    fun modeFor(settings: Settings, nowMillis: Long = System.currentTimeMillis()): Mode = settings.modeAt(nowMillis)
 
     fun setMode(mode: Mode) {
         val s = app.settings.value
@@ -181,12 +179,16 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
     /** Launch after the gate, with an intention and a time budget that nudges when it runs out. */
     fun launchWithIntent(entry: AppEntry, intention: String, minutes: Int) {
         haptics.light()
-        Reminders.schedule(
-            activity, entry.packageName.hashCode(), System.currentTimeMillis() + minutes * 60_000L,
-            Reminders.KIND_GATE,
-            "انتهى وقت ${entry.label}",
-            "قلت \"$intention\" لمدة $minutes دقائق. شنو الخطوة الجاية؟",
-        )
+        val session = app.friction.startSession(entry.packageName, intention, minutes)
+        // With the friction service on, time-up is handled in-app by desaturation; otherwise fall back to a nudge.
+        if (!FrictionService.running) {
+            Reminders.schedule(
+                activity, entry.packageName.hashCode(), session.endsAt,
+                Reminders.KIND_GATE,
+                "انتهى وقت ${entry.label}",
+                "قلت \"$intention\" لمدة $minutes دقائق. شنو الخطوة الجاية؟",
+            )
+        }
         launch(entry, null)
     }
 
@@ -281,6 +283,7 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
             Action.OpenDigest -> open(Overlay.Digest)
             Action.OpenSettings -> open(Overlay.Settings)
             Action.OpenArchive -> open(Overlay.Archive)
+            Action.OpenReport -> open(Overlay.Report)
             Action.OpenDrawer -> open(Overlay.Palette())
         }
     }

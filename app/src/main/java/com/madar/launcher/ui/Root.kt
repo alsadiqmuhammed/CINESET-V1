@@ -63,6 +63,7 @@ fun MadarRoot(c: LauncherController) {
                     Overlay.Digest -> DigestSheet(c)
                     Overlay.Settings -> SettingsSheet(c)
                     Overlay.Archive -> ArchiveSheet(c)
+                    Overlay.Report -> ReportSheet(c)
                 }
             }
             PaletteLayer(c, mode)

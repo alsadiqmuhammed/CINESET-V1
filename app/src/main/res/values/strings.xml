@@ -4,4 +4,6 @@
     <string name="digest_service">كبسولة الإشعارات في مدار</string>
     <string name="channel_nudges">تنبيهات مدار اللطيفة</string>
     <string name="share_label">الرف العابر · مدار</string>
+    <string name="friction_service">الاحتكاك الذكي · مدار</string>
+    <string name="friction_description">يسأل عن نيتك قبل تطبيقات السوشيال والترفيه حتى لو فتحتها من إشعار، ولما يخلص الوقت اللي حددته يهدّي ألوان الشاشة تدريجياً. ما يقرأ محتوى الشاشة، بس يعرف أي تطبيق مفتوح.</string>
 </resources>

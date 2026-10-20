@@ -39,6 +39,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.madar.launcher.data.Mode
 import com.madar.launcher.data.format
 import com.madar.launcher.service.DigestListenerService
+import com.madar.launcher.service.FrictionService
+import com.madar.launcher.service.Grayscale
 
 @Composable
 fun SettingsSheet(c: LauncherController) {
@@ -105,6 +107,34 @@ fun SettingsSheet(c: LauncherController) {
             }
             Text("رسائل الناس (واتساب، تليكرام، SMS) والمكالمات والمنبهات توصلك فوراً. الباقي ينتظر الملخص.", style = Type.caption, color = p.muted, modifier = Modifier.padding(top = 8.dp))
 
+            SectionTitle("الاحتكاك الذكي", code = "FRICTION")
+            Check("بوابة النية لكل التطبيقات", FrictionService.running) {
+                c.start(Intent(SystemSettings.ACTION_ACCESSIBILITY_SETTINGS))
+            }
+            if (!FrictionService.running) {
+                Hint("من إمكانية الوصول ← التطبيقات المثبتة ← \"الاحتكاك الذكي · مدار\". إذا رمادي: معلومات التطبيق ← ⋮ ← السماح بالإعدادات المقيدة.") {
+                    c.start(Intent(SystemSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + context.packageName)))
+                }
+            }
+            Check("التلاشي للأبيض والأسود (adb)", Grayscale.canControl(context)) {
+                context.getSystemService(android.content.ClipboardManager::class.java)
+                    .setPrimaryClip(android.content.ClipData.newPlainText("adb", Grayscale.ADB_GRANT))
+                c.toast("الأمر انتسخ، شغّله من الكمبيوتر")
+            }
+            if (!Grayscale.canControl(context)) {
+                Text(
+                    "بدونه الشاشة تبهت بس ما تصير رمادية بالكامل. وصّل الموبايل بالكمبيوتر وشغّل مرة وحدة:",
+                    style = Type.caption, color = p.muted,
+                )
+                Text(Grayscale.ADB_GRANT, style = Type.tech, color = p.ink, modifier = Modifier.padding(vertical = 6.dp))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
+                Pill(if (s.frictionEnabled) "مفعّل" else "متوقف", selected = s.frictionEnabled) {
+                    c.app.settings.edit { it.copy(frictionEnabled = !it.frictionEnabled) }
+                }
+                Pill("تقرير اليوم") { c.open(Overlay.Report) }
+            }
+
             SectionTitle("جدول الأطوار")
             TimeRow("${Mode.FOCUS.title} من", s.focusStart) { m -> c.app.settings.edit { it.copy(focusStart = m) } }
             TimeRow("${Mode.FOCUS.title} إلى", s.focusEnd) { m -> c.app.settings.edit { it.copy(focusEnd = m) } }
@@ -131,7 +161,7 @@ fun SettingsSheet(c: LauncherController) {
 
             Spacer(Modifier.height(24.dp))
             if (!s.onboarded) Pill("يلا نبدأ", selected = true, onClick = close)
-            Text("MADAR 0.2 · OFFLINE · كل شي يبقى بجهازك", style = Type.tech, color = p.faint, modifier = Modifier.padding(vertical = 24.dp))
+            Text("MADAR 0.3 · OFFLINE · كل شي يبقى بجهازك", style = Type.tech, color = p.faint, modifier = Modifier.padding(vertical = 24.dp))
         }
     } }
 }

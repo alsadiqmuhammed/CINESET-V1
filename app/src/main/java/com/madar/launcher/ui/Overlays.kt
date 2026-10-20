@@ -48,26 +48,51 @@ import com.madar.launcher.data.newItemId
 import com.madar.launcher.data.toLocalTimeLabel
 import kotlinx.coroutines.delay
 
-private data class Intention(val label: String, val minutes: Int)
+data class Intention(val label: String, val minutes: Int)
 
-private val INTENTIONS = listOf(
+val INTENTIONS = listOf(
     Intention("رد على رسالة", 3),
     Intention("نشر محتوى", 5),
     Intention("استراحة", 10),
 )
 
-/**
- * Micro-friction: before an attention-heavy app opens, a translucent pause asks for the intention.
- * Backing out is instant; going in only unlocks after a beat.
- */
+/** The in-launcher gate: shown before Madar itself opens an attention-heavy app. */
 @Composable
 fun IntentGate(c: LauncherController, app: AppEntry, outOfMode: Boolean, mode: Mode) {
+    GateContent(
+        app = app,
+        outOfMode = outOfMode,
+        mode = mode,
+        haptics = c.haptics,
+        onChoose = { c.launchWithIntent(app, it.label, it.minutes) },
+        onRetreat = {
+            c.app.friction.recordRetreat(app.packageName)
+            c.close()
+            c.toast("اختيار موفق")
+        },
+    )
+}
+
+/**
+ * Micro-friction: before an attention-heavy app is used, a pause asks for the intention.
+ * Backing out is instant; going in only unlocks after a beat. Shared by the launcher and the
+ * system-wide overlay that catches apps opened from notifications or recents.
+ */
+@Composable
+fun GateContent(
+    app: AppEntry,
+    outOfMode: Boolean,
+    mode: Mode,
+    haptics: Haptics,
+    onChoose: (Intention) -> Unit,
+    onRetreat: () -> Unit,
+) {
     val p = LocalPalette.current
     var unlocked by remember { mutableStateOf(false) }
     LaunchedEffect(app.key) {
         delay(1500)
         unlocked = true
-        c.haptics.tick()
+        haptics.tick()
     }
     val glyphPx = with(LocalDensity.current) { 56.dp.roundToPx() }
     Box(
@@ -91,7 +116,7 @@ fun IntentGate(c: LauncherController, app: AppEntry, outOfMode: Boolean, mode: M
                             Modifier
                                 .fillMaxWidth()
                                 .matte(p, RoundedCornerShape(16.dp))
-                                .quietClick { c.launchWithIntent(app, i.label, i.minutes) }
+                                .quietClick { haptics.light(); onChoose(i) }
                                 .padding(horizontal = 20.dp, vertical = 16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -103,9 +128,8 @@ fun IntentGate(c: LauncherController, app: AppEntry, outOfMode: Boolean, mode: M
             }
             Spacer(Modifier.height(24.dp))
             TextAction("تراجع", color = p.calm, style = Type.title) {
-                c.haptics.completion()
-                c.close()
-                c.toast("اختيار موفق")
+                haptics.completion()
+                onRetreat()
             }
         }
     }

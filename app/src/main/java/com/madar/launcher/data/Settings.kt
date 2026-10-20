@@ -33,8 +33,20 @@ data class Settings(
     val pomodoroEndsAt: Long = 0,
     val pomodoroMinutes: Int = 25,
     val onboarded: Boolean = false,
+    /** System-wide gate and time-up desaturation (needs the accessibility service). */
+    val frictionEnabled: Boolean = true,
+    /** Previous system colour-correction state, saved while Madar has the screen in grayscale. */
+    val grayscaleHeld: Boolean = false,
+    val previousDaltonizerMode: Int = -1,
 ) {
     val schedule get() = ModeSchedule(focusStart, focusEnd, sanctuaryStart, sanctuaryEnd)
+
+    /** The mode in force right now: a live manual override, else the schedule. */
+    fun modeAt(nowMillis: Long = System.currentTimeMillis()): Mode {
+        if (modeOverride != null && nowMillis / 60_000 < overrideUntil) return modeOverride
+        val t = java.time.Instant.ofEpochMilli(nowMillis).atZone(java.time.ZoneId.systemDefault()).toLocalTime()
+        return schedule.modeAt(t.toDayMinute())
+    }
 }
 
 class SettingsStore(context: Context) {

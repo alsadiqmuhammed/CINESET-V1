@@ -169,6 +169,7 @@ class CommandParser(
         if (has("بطاريه", "battery")) out += Suggestion("البطارية", "استهلاك البطارية", "نظام", Action.SystemPanel(android.content.Intent.ACTION_POWER_USAGE_SUMMARY))
         if (has("ملخص", "الملخص", "اشعارات", "الاشعارات", "digest")) out += Suggestion("الملخص الهادئ", "الإشعارات المجمّعة", "مدار", Action.OpenDigest)
         if (has("اعدادات مدار", "اعدادات", "settings", "ضبط")) out += Suggestion("إعدادات مدار", "الأطوار، الملخص، الأذونات", "مدار", Action.OpenSettings)
+        if (has("تقرير", "التقرير", "report", "احصائيات")) out += Suggestion("تقرير اليوم", "وين راح انتباهك", "مدار", Action.OpenReport)
         if (has("الارشيف", "ارشيف", "archive")) out += Suggestion("أرشيف المشاريع", "المشاريع المنتهية", "مدار", Action.OpenArchive)
         if (has("التطبيقات", "كل التطبيقات", "apps")) out += Suggestion("كل التطبيقات", "القائمة الكاملة", "مدار", Action.OpenDrawer)
         return out

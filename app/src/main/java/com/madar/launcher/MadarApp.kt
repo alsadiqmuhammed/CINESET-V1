@@ -4,10 +4,12 @@ import android.app.Application
 import com.madar.launcher.data.AppsRepository
 import com.madar.launcher.data.ContactsRepository
 import com.madar.launcher.data.DigestRepository
+import com.madar.launcher.data.FrictionRepository
 import com.madar.launcher.data.RecentMedia
 import com.madar.launcher.data.SettingsStore
 import com.madar.launcher.data.ShelfRepository
 import com.madar.launcher.data.StacksRepository
+import com.madar.launcher.service.Grayscale
 import com.madar.launcher.service.Reminders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -24,6 +26,7 @@ class MadarApp : Application() {
     lateinit var contacts: ContactsRepository private set
     lateinit var media: RecentMedia private set
     lateinit var shelf: ShelfRepository private set
+    lateinit var friction: FrictionRepository private set
 
     override fun onCreate() {
         super.onCreate()
@@ -34,6 +37,9 @@ class MadarApp : Application() {
         contacts = ContactsRepository(this)
         media = RecentMedia(this)
         shelf = ShelfRepository(this)
+        friction = FrictionRepository(this)
+        // If the process died while the screen was held in grayscale, give the colour back.
+        Grayscale.release(this)
         Reminders.createChannel(this)
     }
 }

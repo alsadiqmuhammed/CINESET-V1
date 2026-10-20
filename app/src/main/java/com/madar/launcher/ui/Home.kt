@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.madar.launcher.data.AppKind
 import com.madar.launcher.data.Mode
@@ -226,14 +227,23 @@ private fun PolymorphicWidget(c: LauncherController, settings: Settings, mode: M
     val p = LocalPalette.current
     val context = LocalContext.current
     val apps by c.app.apps.apps.collectAsState()
+    val minute = time.withSecond(0).withNano(0)
+    val event = remember(minute) { c.app.agenda.next() }
+    val nowMs = System.currentTimeMillis()
+    val imminent = event?.takeIf { it.begin - nowMs <= 60 * 60_000L }
     Column(
         Modifier
             .fillMaxWidth()
-            .matte(p, RoundedCornerShape(22.dp))
+            .matte(p, RoundedCornerShape(22.dp), edge = if (imminent != null) p.signal.copy(alpha = 0.55f) else p.highlight)
             .padding(20.dp),
     ) {
         when {
-            mode == Mode.FOCUS -> FocusWidget(c, settings)
+            // An appointment within the hour outranks everything: the slot becomes the meeting card.
+            imminent != null -> MeetingCard(c, imminent, nowMs)
+            mode == Mode.FOCUS -> {
+                FocusWidget(c, settings)
+                event?.let { NextEventLine(context, it) }
+            }
             headphonesConnected(context) -> {
                 Text("AUDIO · OUT", style = Type.tech, color = p.muted)
                 Text("السماعة متصلة، كمّل اللي تسمعه", style = Type.title, color = p.ink)
@@ -249,6 +259,9 @@ private fun PolymorphicWidget(c: LauncherController, settings: Settings, mode: M
                     style = Type.body, color = p.muted,
                     modifier = Modifier.quietClick { c.open(Overlay.Report) },
                 )
+                c.app.agenda.tomorrowFirst()?.let {
+                    Text("باچر أول موعد ${formatClock(context, it.begin)} · ${it.title}", style = Type.caption, color = p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
                 CalmLinks(c, apps.filter { it.kind == AppKind.CALM })
             }
             else -> {
@@ -259,10 +272,50 @@ private fun PolymorphicWidget(c: LauncherController, settings: Settings, mode: M
                 }
                 Text(c.nextAlarm()?.let { "NEXT ALARM · ${formatClock(context, it)}" } ?: "TODAY", style = Type.tech, color = p.muted)
                 Text(greeting, style = Type.title, color = p.ink)
-                Text("اسحب للأعلى وكول شتريد.", style = Type.body, color = p.muted)
+                val today = remember(minute.toLocalDate(), minute.hour) { c.app.agenda.today().filter { it.end > nowMs } }
+                when {
+                    !c.app.agenda.hasPermission -> Text("اسحب للأعلى وكول شتريد.", style = Type.body, color = p.muted)
+                    today.isEmpty() -> Text("ماكو مواعيد باقية اليوم.", style = Type.body, color = p.muted)
+                    else -> Text(
+                        "باقي %d %s اليوم، الجاي %s".fmt(today.size, if (today.size == 1) "موعد" else "مواعيد", formatClock(context, today.first().begin)),
+                        style = Type.body, color = p.muted,
+                    )
+                }
             }
         }
     }
+}
+
+/** The widget's meeting form: countdown in mono, one tap to join the call or open the event. */
+@Composable
+private fun MeetingCard(c: LauncherController, e: com.madar.launcher.data.AgendaEvent, now: Long) {
+    val p = LocalPalette.current
+    val context = LocalContext.current
+    val started = e.begin <= now
+    Text(
+        if (started) "NOW · ENDS ${formatClock(context, e.end)}" else "IN %d MIN · %s".fmt((e.begin - now + 59_999) / 60_000, formatClock(context, e.begin)),
+        style = Type.tech, color = p.signal,
+    )
+    Text(e.title, style = Type.title, color = p.ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    if (e.location.isNotBlank()) Text(e.location, style = Type.body, color = p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        e.joinUrl?.let { url ->
+            Pill("انضم", selected = true, color = p.signal) { c.haptics.completion(); c.start(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))) }
+        }
+        Pill("التفاصيل") {
+            c.start(Intent(Intent.ACTION_VIEW, android.content.ContentUris.withAppendedId(android.provider.CalendarContract.Events.CONTENT_URI, e.eventId)))
+        }
+    }
+}
+
+@Composable
+private fun NextEventLine(context: Context, e: com.madar.launcher.data.AgendaEvent) {
+    val p = LocalPalette.current
+    Text(
+        "الموعد الجاي ${formatClock(context, e.begin)} · ${e.title}",
+        style = Type.caption, color = p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.padding(top = 10.dp),
+    )
 }
 
 @Composable
@@ -372,5 +425,5 @@ private fun headphonesConnected(context: Context): Boolean =
 
 private fun formatClock(context: Context, millis: Long): String {
     val t = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
-    return t.format(DateTimeFormatter.ofPattern(if (DateFormat.is24HourFormat(context)) "HH:mm" else "hh:mm a"))
+    return t.format(DateTimeFormatter.ofPattern(if (DateFormat.is24HourFormat(context)) "HH:mm" else "hh:mm a", java.util.Locale.ROOT))
 }

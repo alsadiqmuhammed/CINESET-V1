@@ -99,7 +99,15 @@ class ScreensTest {
             on { controller.setMode(mode) }
             shot("1-home-${mode.name.lowercase()}")
         }
-        on { controller.setMode(Mode.FLOW); controller.open(Overlay.Palette()) }
+        on {
+            val now = System.currentTimeMillis()
+            app.agenda.fakeEvents = listOf(
+                com.madar.launcher.data.AgendaEvent(1, "مراجعة خطة الإطلاق", now + 18 * 60_000, now + 78 * 60_000, "", "https://meet.google.com/abc-defg-hij"),
+            )
+            controller.setMode(Mode.FLOW)
+        }
+        shot("1-home-meeting")
+        on { app.agenda.fakeEvents = null; controller.open(Overlay.Palette()) }
         shot("2-palette-empty")
         on { controller.open(Overlay.Palette("مؤقت ربع ساعة")) }
         shot("3-palette-timer")

@@ -1,6 +1,7 @@
 package com.madar.launcher
 
 import android.app.Application
+import com.madar.launcher.data.AgendaRepository
 import com.madar.launcher.data.AppsRepository
 import com.madar.launcher.data.ContactsRepository
 import com.madar.launcher.data.DigestRepository
@@ -27,6 +28,7 @@ class MadarApp : Application() {
     lateinit var media: RecentMedia private set
     lateinit var shelf: ShelfRepository private set
     lateinit var friction: FrictionRepository private set
+    lateinit var agenda: AgendaRepository private set
 
     override fun onCreate() {
         super.onCreate()
@@ -38,6 +40,7 @@ class MadarApp : Application() {
         media = RecentMedia(this)
         shelf = ShelfRepository(this)
         friction = FrictionRepository(this)
+        agenda = AgendaRepository(this)
         // If the process died while the screen was held in grayscale, give the colour back.
         Grayscale.release(this)
         Reminders.createChannel(this)

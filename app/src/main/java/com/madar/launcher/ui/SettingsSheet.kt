@@ -76,6 +76,9 @@ fun SettingsSheet(c: LauncherController) {
                     c.app.contacts.invalidate(); refresh.intValue++
                 }
             }
+            Check("التقويم (بطاقة الموعد بالويدجت)", granted(context, Manifest.permission.READ_CALENDAR)) {
+                c.requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR)) { refresh.intValue++ }
+            }
             Check("الصور والفيديو (لأمر \"دز آخر صورة\")", granted(context, Manifest.permission.READ_MEDIA_IMAGES)) {
                 c.requestPermissions(arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO)) { refresh.intValue++ }
             }

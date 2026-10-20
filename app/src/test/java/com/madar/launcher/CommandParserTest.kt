@@ -93,6 +93,14 @@ class CommandParserTest {
         assertEquals(6 * 60, s.nextBoundaryAfter(23 * 60))
     }
 
+    @Test fun customCommands() {
+        val light = com.madar.launcher.data.CustomCommand("شغل الضوء", com.madar.launcher.data.CommandTarget.BROADCAST, "light_on")
+        val p = CommandParser({ emptyList() }, { emptyList() }, { emptyList() }, { listOf(light) })
+        assertEquals(Action.RunCustom(light, ""), p.parse("شغّل الضوء").first().action)
+        assertEquals(Action.RunCustom(light, "الصالة"), p.parse("شغل الضوء الصالة").first().action)
+        assertEquals(Action.RunCustom(light, ""), p.parse("شغل ال").first().action)
+    }
+
     @Test fun iraqiNumbers() {
         assertEquals("9647701234567", LauncherController.internationalDigits("07701234567"))
         assertEquals("9647701234567", LauncherController.internationalDigits("+964 770 123 4567"))

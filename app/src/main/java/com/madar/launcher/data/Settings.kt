@@ -40,6 +40,7 @@ data class Settings(
     val previousDaltonizerMode: Int = -1,
     /** Ghost space: packages that exist only inside the vault. */
     val hiddenPackages: Set<String> = emptySet(),
+    val customCommands: List<CustomCommand> = emptyList(),
 ) {
     val schedule get() = ModeSchedule(focusStart, focusEnd, sanctuaryStart, sanctuaryEnd)
 

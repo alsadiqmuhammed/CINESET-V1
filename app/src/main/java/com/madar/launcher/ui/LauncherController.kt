@@ -66,6 +66,7 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
         apps = { app.apps.apps.value },
         contacts = { app.contacts.search(it) },
         stacks = { app.stacks.stacks.value },
+        custom = { app.settings.value.customCommands },
     )
 
     var overlay by mutableStateOf<Overlay>(if (app.settings.value.onboarded) Overlay.None else Overlay.Settings)
@@ -292,6 +293,7 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
             is Action.StartPomodoro -> done { startPomodoro(action.minutes) }
             is Action.SystemPanel -> done { start(Intent(action.intentAction)) }
             Action.Torch -> done { toggleTorch() }
+            is Action.RunCustom -> done { runCustom(action.command, action.text) }
             Action.OpenDigest -> open(Overlay.Digest)
             Action.OpenSettings -> open(Overlay.Settings)
             Action.OpenArchive -> open(Overlay.Archive)
@@ -385,6 +387,28 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
         app.stacks.addItem(inbox.id, StackItem.Note(newItemId(), text))
     }
 
+    private fun runCustom(cmd: com.madar.launcher.data.CustomCommand, text: String) {
+        when (cmd.target) {
+            com.madar.launcher.data.CommandTarget.BROADCAST -> activity.sendBroadcast(
+                Intent(ACTION_COMMAND)
+                    .putExtra("command", cmd.value.ifBlank { cmd.phrase })
+                    .putExtra("text", text)
+                    .addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES),
+            )
+            com.madar.launcher.data.CommandTarget.TASKER_TASK -> activity.sendBroadcast(
+                Intent("net.dinglisch.android.tasker.ACTION_TASK")
+                    .setData(Uri.parse("id:" + System.nanoTime()))
+                    .putExtra("version_number", "1.1")
+                    .putExtra("task_name", cmd.value)
+                    .putExtra("task_priority", 5)
+                    .putStringArrayListExtra("varNames", arrayListOf("%madar_text"))
+                    .putExtra("%madar_text", text),
+            )
+            com.madar.launcher.data.CommandTarget.URI -> start(Intent(Intent.ACTION_VIEW, Uri.parse(cmd.value.replace("{text}", Uri.encode(text)))))
+        }
+        toast("انرسل: ${cmd.phrase}")
+    }
+
     private fun toggleTorch() {
         val id = torchId ?: return toast("ما بيه فلاش")
         camera.setTorchMode(id, !torchOn)
@@ -416,6 +440,9 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
 
     companion object {
         const val INBOX = "صندوق الملاحظات"
+
+        /** Public broadcast for the open action protocol (Tasker: Event → Intent Received). */
+        const val ACTION_COMMAND = "com.madar.launcher.COMMAND"
         private const val POMODORO_CODE = 7001
 
         /** Contacts are stored as +9647…, 07…, or 7…; WhatsApp and Telegram want 9647…. */

@@ -16,6 +16,7 @@ class CommandParser(
     private val apps: () -> List<AppEntry>,
     private val contacts: (String) -> List<ContactEntry>,
     private val stacks: () -> List<Stack>,
+    private val custom: () -> List<com.madar.launcher.data.CustomCommand> = { emptyList() },
 ) {
 
     fun parse(raw: String): List<Suggestion> {
@@ -26,6 +27,17 @@ class CommandParser(
         val rest = tokens.drop(1).joinToString(" ")
 
         val out = mutableListOf<Suggestion>()
+
+        // The user's own commands come first: they asked for exactly this phrase.
+        custom().forEach { cmd ->
+            val phrase = normalize(cmd.phrase)
+            if (phrase.isNotEmpty() && (q == phrase || q.startsWith("$phrase "))) {
+                val text = raw.trim().split(Regex("\\s+")).drop(phrase.split(' ').size).joinToString(" ")
+                out += Suggestion(cmd.phrase, text.ifEmpty { cmd.target.title }, "أمرك", Action.RunCustom(cmd, text))
+            } else if (phrase.startsWith(q) && q.length >= 2) {
+                out += Suggestion(cmd.phrase, cmd.target.title, "أمرك", Action.RunCustom(cmd, ""))
+            }
+        }
 
         Calc.tryEvaluate(q)?.let {
             out += Suggestion("= $it", "اضغط للنسخ", "حاسبة", Action.CopyResult(it))

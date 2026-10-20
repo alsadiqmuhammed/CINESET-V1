@@ -138,6 +138,8 @@ fun SettingsSheet(c: LauncherController) {
                 Pill("تقرير اليوم") { c.open(Overlay.Report) }
             }
 
+            CustomCommandsSection(c, s)
+
             SectionTitle("جدول الأطوار")
             TimeRow("${Mode.FOCUS.title} من", s.focusStart) { m -> c.app.settings.edit { it.copy(focusStart = m) } }
             TimeRow("${Mode.FOCUS.title} إلى", s.focusEnd) { m -> c.app.settings.edit { it.copy(focusEnd = m) } }

@@ -148,6 +148,8 @@ fun SettingsSheet(c: LauncherController) {
             TimeRow("${Mode.SANCTUARY.title} إلى", s.sanctuaryEnd) { m -> c.app.settings.edit { it.copy(sanctuaryEnd = m) } }
             Text("باقي الوقت ${Mode.FLOW.title}. التبديل اليدوي من أعلى الشاشة يبقى لحد الموعد الجاي.", style = Type.caption, color = p.muted)
 
+            PlacesSection(c, s)
+
             SectionTitle("القوس والتركيز")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Pill("اليد اليمنى", selected = s.rightHanded) { c.app.settings.edit { it.copy(rightHanded = true) } }

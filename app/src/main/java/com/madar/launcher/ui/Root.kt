@@ -27,7 +27,8 @@ fun MadarRoot(c: LauncherController) {
     val stacks by c.app.stacks.stacks.collectAsState()
     val digestItems by c.app.digest.items.collectAsState()
     val now by rememberNow()
-    val mode = remember(settings, now) { c.modeFor(settings, now) }
+    val ssid by c.app.places.ssid.collectAsState()
+    val mode = remember(settings, now, ssid) { c.modeFor(settings, now) }
 
     // Mode changes (scheduled or manual) land with a rising haptic so the morph is felt, not just seen.
     val lastMode = remember { arrayOf<Mode?>(null) }

@@ -90,12 +90,13 @@ class LauncherController(private val activity: MainActivity, val app: MadarApp) 
 
     // region Modes
 
-    fun modeFor(settings: Settings, nowMillis: Long = System.currentTimeMillis()): Mode = settings.modeAt(nowMillis)
+    fun modeFor(settings: Settings, nowMillis: Long = System.currentTimeMillis()): Mode = settings.modeAt(nowMillis, app.places.ssid.value)
 
     fun setMode(mode: Mode) {
         val s = app.settings.value
         val now = LocalTime.now().toDayMinute()
-        val scheduled = s.schedule.modeAt(now)
+        // What would apply without an override (place, then schedule); picking it just clears the override.
+        val scheduled = s.copy(modeOverride = null).modeAt(System.currentTimeMillis(), app.places.ssid.value)
         if (mode == scheduled) {
             app.settings.edit { it.copy(modeOverride = null, overrideUntil = 0) }
             return

@@ -53,6 +53,17 @@ class FrictionTest {
         assertEquals(LocalDate.now().toString(), repo.lastDays(7).last().date)
     }
 
+    @Test fun placeOutranksScheduleButNotOverride() {
+        val at = { h: Int -> LocalDate.now().atTime(h, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() }
+        val s = Settings(places = listOf(com.madar.launcher.data.Place("Office", Mode.FOCUS), com.madar.launcher.data.Place("Home", Mode.SANCTUARY, from = 20 * 60, to = 6 * 60)))
+        assertEquals(Mode.FOCUS, s.modeAt(at(16), "Office")) // schedule says flow at 16:00
+        assertEquals(Mode.FLOW, s.modeAt(at(16), "Home")) // home only counts in the evening
+        assertEquals(Mode.SANCTUARY, s.modeAt(at(20), "Home"))
+        assertEquals(Mode.FLOW, s.modeAt(at(16), null))
+        val overridden = s.copy(modeOverride = Mode.FLOW, overrideUntil = at(16) / 60_000 + 60)
+        assertEquals(Mode.FLOW, overridden.modeAt(at(16), "Office"))
+    }
+
     @Test fun manualOverrideExpires() {
         val noon = LocalDate.now().atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val s = Settings(modeOverride = Mode.SANCTUARY, overrideUntil = noon / 60_000 + 30)

@@ -119,14 +119,14 @@ class FrictionService : AccessibilityService() {
 
     private fun isGated(pkg: String): Boolean {
         val entry = app.apps.findPackage(pkg) ?: return false
-        return entry.kind.gated || !entry.kind.visibleIn(app.settings.value.modeAt())
+        return entry.kind.gated || !entry.kind.visibleIn(app.currentMode())
     }
 
     // region Gate
 
     private fun showGate(pkg: String) {
         val entry = app.apps.findPackage(pkg) ?: return
-        val mode = app.settings.value.modeAt()
+        val mode = app.currentMode()
         app.friction.recordPrompt()
         haptics.heavy()
         pauseMedia()
@@ -194,7 +194,7 @@ class FrictionService : AccessibilityService() {
     private fun showChip(entry: AppEntry, canExtend: Boolean) {
         dismissChip()
         chip = Overlay(focusable = false, fullScreen = false) {
-            MadarTheme(app.settings.value.modeAt()) {
+            MadarTheme(app.currentMode()) {
                 TimeUpChip(
                     label = entry.label,
                     canExtend = canExtend,

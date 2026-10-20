@@ -41,14 +41,16 @@ data class Settings(
     /** Ghost space: packages that exist only inside the vault. */
     val hiddenPackages: Set<String> = emptySet(),
     val customCommands: List<CustomCommand> = emptyList(),
+    val places: List<Place> = emptyList(),
 ) {
     val schedule get() = ModeSchedule(focusStart, focusEnd, sanctuaryStart, sanctuaryEnd)
 
-    /** The mode in force right now: a live manual override, else the schedule. */
-    fun modeAt(nowMillis: Long = System.currentTimeMillis()): Mode {
+    /** The mode in force: a live manual override, else the place you're at, else the schedule. */
+    fun modeAt(nowMillis: Long = System.currentTimeMillis(), ssid: String? = null): Mode {
         if (modeOverride != null && nowMillis / 60_000 < overrideUntil) return modeOverride
-        val t = java.time.Instant.ofEpochMilli(nowMillis).atZone(java.time.ZoneId.systemDefault()).toLocalTime()
-        return schedule.modeAt(t.toDayMinute())
+        val minute = java.time.Instant.ofEpochMilli(nowMillis).atZone(java.time.ZoneId.systemDefault()).toLocalTime().toDayMinute()
+        if (ssid != null) places.firstOrNull { it.ssid == ssid && it.activeAt(minute) }?.let { return it.mode }
+        return schedule.modeAt(minute)
     }
 }
 

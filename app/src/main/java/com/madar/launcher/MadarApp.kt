@@ -6,6 +6,8 @@ import com.madar.launcher.data.AppsRepository
 import com.madar.launcher.data.ContactsRepository
 import com.madar.launcher.data.DigestRepository
 import com.madar.launcher.data.FrictionRepository
+import com.madar.launcher.data.Mode
+import com.madar.launcher.data.PlacesRepository
 import com.madar.launcher.data.RecentMedia
 import com.madar.launcher.data.SettingsStore
 import com.madar.launcher.data.ShelfRepository
@@ -29,6 +31,7 @@ class MadarApp : Application() {
     lateinit var shelf: ShelfRepository private set
     lateinit var friction: FrictionRepository private set
     lateinit var agenda: AgendaRepository private set
+    lateinit var places: PlacesRepository private set
 
     override fun onCreate() {
         super.onCreate()
@@ -41,8 +44,12 @@ class MadarApp : Application() {
         shelf = ShelfRepository(this)
         friction = FrictionRepository(this)
         agenda = AgendaRepository(this)
+        places = PlacesRepository(this).also { it.start() }
         // If the process died while the screen was held in grayscale, give the colour back.
         Grayscale.release(this)
         Reminders.createChannel(this)
     }
+
+    /** The one place the effective mode is decided: override, then place, then schedule. */
+    fun currentMode(nowMillis: Long = System.currentTimeMillis()): Mode = settings.value.modeAt(nowMillis, places.ssid.value)
 }

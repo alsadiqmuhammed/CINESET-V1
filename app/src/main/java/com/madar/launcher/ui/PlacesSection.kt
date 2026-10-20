@@ -30,7 +30,7 @@ fun PlacesSection(c: LauncherController, s: Settings) {
         Text("مدار يعرف مكانك من اسم شبكة الواي فاي بس، بدون GPS. أندرويد يشترط إذن الموقع حتى يكشف اسم الشبكة.", style = Type.caption, color = p.muted)
         Row(Modifier.padding(top = 8.dp)) {
             Pill("سماح") {
-                c.requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) { c.app.places.start() }
+                c.requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) { c.app.places.start() }
             }
         }
         return
